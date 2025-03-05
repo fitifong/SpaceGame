@@ -1,0 +1,62 @@
+[gd_scene load_steps=6 format=3 uid="uid://r3kwlam405ca"]
+
+[ext_resource type="Script" path="res://scripts/storage_module.gd" id="1_py1wb"]
+[ext_resource type="Texture2D" uid="uid://dxhm78yiruftb" path="res://assets/ship/storage_cabinet.aseprite" id="2_j4t6x"]
+[ext_resource type="Texture2D" uid="uid://463da7amsqrx" path="res://assets/icons/icon_e_key.aseprite" id="3_7wlfw"]
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_vifye"]
+size = Vector2(16, 14)
+
+[sub_resource type="CircleShape2D" id="CircleShape2D_e8qio"]
+radius = 17.0
+
+[node name="StorageCabinet" type="StaticBody2D"]
+position = Vector2(0, -16)
+script = ExtResource("1_py1wb")
+
+[node name="Sprite2D" type="Sprite2D" parent="."]
+texture = ExtResource("2_j4t6x")
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="."]
+position = Vector2(0, -5)
+shape = SubResource("RectangleShape2D_vifye")
+
+[node name="InteractionArea" type="Area2D" parent="."]
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="InteractionArea"]
+position = Vector2(0, 9)
+shape = SubResource("CircleShape2D_e8qio")
+
+[node name="InteractionPrompt" type="Control" parent="."]
+layout_mode = 3
+anchors_preset = 0
+offset_left = -23.0
+offset_top = -3.0
+offset_right = 282.0
+offset_bottom = 37.0
+scale = Vector2(0.15, 0.15)
+
+[node name="TextureRect" type="TextureRect" parent="InteractionPrompt"]
+layout_mode = 0
+offset_right = 40.0
+offset_bottom = 40.0
+texture = ExtResource("3_7wlfw")
+
+[node name="Label" type="Label" parent="InteractionPrompt"]
+layout_mode = 1
+anchors_preset = 6
+anchor_left = 1.0
+anchor_top = 0.5
+anchor_right = 1.0
+anchor_bottom = 0.5
+offset_left = -253.0
+offset_top = -17.0
+offset_bottom = 17.0
+grow_horizontal = 0
+grow_vertical = 2
+theme_override_colors/font_shadow_color = Color(0, 0, 0, 1)
+theme_override_font_sizes/font_size = 24
+text = "Open Storage Cabinet"
+
+[connection signal="body_entered" from="InteractionArea" to="." method="_on_interaction_area_body_entered"]
+[connection signal="body_exited" from="InteractionArea" to="." method="_on_interaction_area_body_exited"]

@@ -1,0 +1,42 @@
+[gd_scene load_steps=5 format=3 uid="uid://dyumiert2l0lo"]
+
+[ext_resource type="Script" path="res://scripts/storage_slot_ui.gd" id="1_wd2hd"]
+[ext_resource type="Texture2D" uid="uid://ciqj15q25pbxe" path="res://assets/UI Sprites/UI_slot.aseprite" id="2_yhurj"]
+[ext_resource type="Texture2D" uid="uid://y86bdcyf6rr" path="res://assets/icons/icon_screw.aseprite" id="3_k6h84"]
+[ext_resource type="FontFile" uid="uid://bwdms2jowj8in" path="res://assets/fonts/DroidSans.ttf" id="4_ok2us"]
+
+[node name="StorageSlotUI" type="Panel"]
+self_modulate = Color(1, 1, 1, 0)
+custom_minimum_size = Vector2(64, 64)
+anchors_preset = -1
+anchor_right = 0.028
+anchor_bottom = 0.049
+offset_right = -0.256001
+offset_bottom = 0.247999
+tooltip_text = "dsgh"
+script = ExtResource("1_wd2hd")
+
+[node name="SlotSprite" type="Sprite2D" parent="."]
+scale = Vector2(2, 2)
+texture = ExtResource("2_yhurj")
+centered = false
+
+[node name="ItemIcon" type="Sprite2D" parent="SlotSprite"]
+position = Vector2(15.2, 15.2)
+scale = Vector2(0.95, 0.95)
+texture = ExtResource("3_k6h84")
+
+[node name="ItemQuantity" type="Label" parent="SlotSprite"]
+offset_left = 21.0
+offset_top = 20.0
+offset_right = 38.0
+offset_bottom = 39.0
+scale = Vector2(0.462585, 0.462585)
+theme_override_colors/font_color = Color(0, 0, 0, 1)
+theme_override_fonts/font = ExtResource("4_ok2us")
+theme_override_font_sizes/font_size = 16
+text = "1"
+
+[connection signal="gui_input" from="." to="." method="_on_gui_input"]
+[connection signal="mouse_entered" from="." to="." method="_on_mouse_entered"]
+[connection signal="mouse_exited" from="." to="." method="_on_mouse_exited"]

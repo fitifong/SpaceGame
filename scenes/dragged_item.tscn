@@ -1,0 +1,72 @@
+[gd_scene load_steps=4 format=3 uid="uid://dialpudqevf8c"]
+
+[ext_resource type="Texture2D" uid="uid://y86bdcyf6rr" path="res://assets/icons/icon_screw.aseprite" id="1_j4iq8"]
+[ext_resource type="FontFile" uid="uid://bwdms2jowj8in" path="res://assets/fonts/DroidSans.ttf" id="2_1fhue"]
+
+[sub_resource type="GDScript" id="GDScript_i246r"]
+script/source = "extends Control
+#
+#@onready var icon: Sprite2D = $item_icon
+#@onready var quantity: Label = $item_quantity
+#
+#var target_layer: CanvasLayer = null  # The layer where the dragged item will be added (e.g., GUIs)
+#var dragging = false
+#
+## Called when the drag starts
+#func _ready():
+	#target_layer = get_parent() 
+	#self.visible = false
+#
+## Start the drag (should be triggered from BaseInventory)
+#func start_drag(item_data):
+	#icon.texture = item_data[\"item_texture\"]
+	#quantity.text = str(item_data[\"item_quantity\"])
+	#self.position = get_viewport().get_mouse_position()
+	#self.visible = true  
+	#set_process(true) 
+#
+#
+## Update the position during the drag
+#func _process(_delta):
+	#if dragging:
+		#self.position = get_viewport().get_mouse_position()
+#
+## Stop the drag and finalize position
+#func stop_drag():
+	#set_process(false)
+	#self.visible = false 
+"
+
+[node name="DraggedItem" type="Control"]
+layout_mode = 3
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -20.0
+offset_top = -20.0
+offset_right = 20.0
+offset_bottom = 20.0
+grow_horizontal = 2
+grow_vertical = 2
+scale = Vector2(2, 2)
+script = SubResource("GDScript_i246r")
+
+[node name="ItemIcon" type="Sprite2D" parent="."]
+position = Vector2(20, 20)
+texture = ExtResource("1_j4iq8")
+
+[node name="ItemQuantity" type="Label" parent="."]
+layout_mode = 2
+anchor_right = 0.855
+anchor_bottom = 0.842
+offset_left = 24.5
+offset_top = 23.5
+offset_right = 11.3
+offset_bottom = 8.82
+scale = Vector2(0.462585, 0.462585)
+theme_override_colors/font_color = Color(0, 0, 0, 1)
+theme_override_fonts/font = ExtResource("2_1fhue")
+theme_override_font_sizes/font_size = 18
+text = "1"
