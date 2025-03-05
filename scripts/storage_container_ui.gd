@@ -3,7 +3,7 @@ class_name StorageContainerUI
 
 @onready var player_inventory_ui: Control = get_node("/root/Game/GUIs/PlayerInventoryUI")  
 
-var storage_data: InventoryManager = null  # Storage inventory reference
+var storage_data = null  # Storage inventory reference
 
 # ----------------- 🟢 INITIALIZATION ----------------- #
 func _ready():

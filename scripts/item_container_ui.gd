@@ -10,7 +10,7 @@ const UI_SLOT_HOVER = preload("res://assets/UI Sprites/UI_slot_hover.aseprite")
 const UI_SLOT_DRAG = preload("res://assets/UI Sprites/UI_slot_drag.aseprite")
 
 # Reference to an InventoryManager for this container (e.g. player inv, storage inv)
-var inventory_data_ref: InventoryManager = null
+var inventory_data_ref = null
 
 # ------------------------------------------------------------------
 # 🟢 INITIALIZATION
