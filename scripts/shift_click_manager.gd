@@ -36,28 +36,29 @@ func transfer_item_between_inventories(source_inv, target_inv, source_slot: int)
 		return  # No item to transfer.
 
 	var moved_quantity = attempt_stack_in_inventory(target_inv, source_item)
-	source_item["item_quantity"] -= moved_quantity
+	source_item["quantity"] -= moved_quantity
 	
 	# Remove item if quantity reaches zero.
-	if source_item["item_quantity"] <= 0:
+	if source_item["quantity"] <= 0:
 		source_inv.inventory[source_slot] = null
 	
 	source_inv.emit_signal("slot_updated", source_slot)
 
 func attempt_stack_in_inventory(inventory, item_data) -> int:
 	var total_moved = 0
-	var quantity_to_move = item_data["item_quantity"]
+	var quantity_to_move = item_data["quantity"]
 
 	# Pass 1: Merge into existing stacks.
 	for i in range(inventory.inventory_size):
 		if quantity_to_move <= 0:
 			break
 		var slot_item = inventory.inventory[i]
-		if slot_item != null and slot_item["item_name"] == item_data["item_name"]:
-			var capacity = 99 - slot_item["item_quantity"]
+		# Compare by unique item ID.
+		if slot_item != null and slot_item["id"] == item_data["id"]:
+			var capacity = 99 - slot_item["quantity"]
 			if capacity > 0:
 				var move_amount = min(capacity, quantity_to_move)
-				slot_item["item_quantity"] += move_amount
+				slot_item["quantity"] += move_amount
 				quantity_to_move -= move_amount
 				total_moved += move_amount
 				inventory.emit_signal("slot_updated", i)
@@ -68,8 +69,11 @@ func attempt_stack_in_inventory(inventory, item_data) -> int:
 			break
 		if inventory.inventory[i] == null:
 			var move_amount = min(99, quantity_to_move)
-			var new_item = item_data.duplicate()
-			new_item["item_quantity"] = move_amount
+			# Create a new item dictionary using only id and quantity.
+			var new_item = {
+				"id": item_data["id"],
+				"quantity": move_amount
+			}
 			inventory.inventory[i] = new_item
 			quantity_to_move -= move_amount
 			total_moved += move_amount
