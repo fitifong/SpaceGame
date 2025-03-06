@@ -25,6 +25,7 @@ PlayerInventory="*res://scripts/player_inventory.gd"
 DragManager="*res://scripts/drag_manager.gd"
 UIManager="*res://scripts/ui_manager.gd"
 ShiftClickManager="*res://scripts/shift_click_manager.gd"
+ItemDatabase="*res://scripts/item_database.gd"
 
 [dotnet]
 

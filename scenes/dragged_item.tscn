@@ -1,6 +1,6 @@
 [gd_scene load_steps=4 format=3 uid="uid://dialpudqevf8c"]
 
-[ext_resource type="Texture2D" uid="uid://y86bdcyf6rr" path="res://assets/icons/icon_screw.aseprite" id="1_j4iq8"]
+[ext_resource type="Texture2D" uid="uid://y86bdcyf6rr" path="res://assets/items/screw.aseprite" id="1_j4iq8"]
 [ext_resource type="FontFile" uid="uid://bwdms2jowj8in" path="res://assets/fonts/DroidSans.ttf" id="2_1fhue"]
 
 [sub_resource type="GDScript" id="GDScript_i246r"]

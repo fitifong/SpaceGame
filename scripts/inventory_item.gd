@@ -1,8 +1,7 @@
 extends Node2D
 class_name InventoryItem
 
-@export var item_type = ""
-@export var item_name = ""
+@export var item_id: int = 0
 @export var item_texture: Texture
 @export var item_quantity: int
 
@@ -27,26 +26,22 @@ func _process(_delta: float) -> void:
 # ----------------- 🔵 ITEM PICKUP ----------------- #
 # Adds item to player's inventory, reverts leftover to ground if can't fit all.
 func pickup_item():
-	var item_data = {
-		"item_quantity": item_quantity,
-		"item_type": item_type,
-		"item_name": item_name,
-		"item_texture": item_texture,
-		"scene_path": scene_path
+	# Build pickup data with only the unique id and quantity.
+	var pickup_data = {
+		"item_id": item_id,
+		"item_quantity": item_quantity
 	}
-
-	# Attempt to add to the player's inventory
+	
+	# Attempt to add the item to the player's inventory.
 	if PlayerInventory.player_node:
-		var leftover = PlayerInventory.add_pickup(item_data)
-
+		var leftover = PlayerInventory.add_pickup(pickup_data)
+		
 		if leftover <= 0:
-			# All items were placed, remove from world
+			# All items fit; remove the pickup from the world.
 			queue_free()
 		else:
-			# Some items remain on the ground
+			# Some items couldn't be added, so update the quantity.
 			item_quantity = leftover
-			# Optionally update any label with leftover count, e.g.:
-			# $QuantityLabel.text = str(item_quantity)
 
 # ----------------- 🟠 PLAYER INTERACTION ----------------- #
 # Toggle 'player_in_range' on collision

@@ -2,16 +2,16 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://cxanugslje4kc"
-path="res://.godot/imported/icon_metal.aseprite-e04c9a5bef6df48023c276c7dc86bc89.ctex"
+uid="uid://m12iecqgoog8"
+path="res://.godot/imported/e_key.aseprite-deff408fb361460912afaddfa676fd84.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://assets/icons/icon_metal.aseprite"
-dest_files=["res://.godot/imported/icon_metal.aseprite-e04c9a5bef6df48023c276c7dc86bc89.ctex"]
+source_file="res://assets/icons/e_key.aseprite"
+dest_files=["res://.godot/imported/e_key.aseprite-deff408fb361460912afaddfa676fd84.ctex"]
 
 [params]
 
