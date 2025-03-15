@@ -52,7 +52,7 @@ func start_drag(container: ItemContainerUI, slot_button: Button, event: InputEve
 		inv_manager.inventory[index] = null
 	elif event.button_index == MOUSE_BUTTON_RIGHT:
 		# Right-click split: drag half the stack.
-		var half_stack = ceil(source_item["quantity"] / 2.0)
+		var half_stack = ceil(source_item["quantity"] / 2)
 		drag_data["quantity"] = half_stack
 		source_item["quantity"] -= half_stack
 		if source_item["quantity"] <= 0:

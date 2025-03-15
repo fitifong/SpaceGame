@@ -1,6 +1,6 @@
 [gd_scene load_steps=6 format=3 uid="uid://r3kwlam405ca"]
 
-[ext_resource type="Script" path="res://scripts/storage_module.gd" id="1_py1wb"]
+[ext_resource type="Script" uid="uid://cp48kkeai3j52" path="res://scripts/storage_module.gd" id="1_py1wb"]
 [ext_resource type="Texture2D" uid="uid://dxhm78yiruftb" path="res://assets/ship/storage_cabinet.aseprite" id="2_j4t6x"]
 [ext_resource type="Texture2D" uid="uid://m12iecqgoog8" path="res://assets/icons/e_key.aseprite" id="3_e2hyo"]
 

@@ -163,15 +163,15 @@ tracks/0/keys = {
 
 [sub_resource type="AnimationLibrary" id="AnimationLibrary_x3lgo"]
 _data = {
-"RESET": SubResource("Animation_tf0d0"),
-"idle_down": SubResource("Animation_o7ejs"),
-"idle_left": SubResource("Animation_pus35"),
-"idle_right": SubResource("Animation_2syna"),
-"idle_up": SubResource("Animation_yn3m7"),
-"walk_down": SubResource("Animation_y3rip"),
-"walk_left": SubResource("Animation_1w1fk"),
-"walk_right": SubResource("Animation_twiwe"),
-"walk_up": SubResource("Animation_sr1o7")
+&"RESET": SubResource("Animation_tf0d0"),
+&"idle_down": SubResource("Animation_o7ejs"),
+&"idle_left": SubResource("Animation_pus35"),
+&"idle_right": SubResource("Animation_2syna"),
+&"idle_up": SubResource("Animation_yn3m7"),
+&"walk_down": SubResource("Animation_y3rip"),
+&"walk_left": SubResource("Animation_1w1fk"),
+&"walk_right": SubResource("Animation_twiwe"),
+&"walk_up": SubResource("Animation_sr1o7")
 }
 
 [sub_resource type="CircleShape2D" id="CircleShape2D_g5ksb"]

@@ -1,8 +1,8 @@
 [gd_scene load_steps=16 format=4 uid="uid://n8vp2wlbrt8m"]
 
 [ext_resource type="PackedScene" uid="uid://t35wdyso8tvt" path="res://scenes/player.tscn" id="1_q1vwe"]
-[ext_resource type="Script" path="res://scripts/player.gd" id="2_17kk5"]
-[ext_resource type="Script" path="res://scripts/ui_background.gd" id="3_oqyv4"]
+[ext_resource type="Script" uid="uid://cbbq47ho5qvlp" path="res://scripts/player.gd" id="2_17kk5"]
+[ext_resource type="Script" uid="uid://cccyq4k18wrhq" path="res://scripts/ui_background.gd" id="3_oqyv4"]
 [ext_resource type="Texture2D" uid="uid://ii6bg8hcx3pb" path="res://assets/ship/ship_interior_main.aseprite" id="3_p03bi"]
 [ext_resource type="Texture2D" uid="uid://cvk0lvg2rl3sd" path="res://assets/ship/ship_tiles_main.aseprite" id="3_q55nj"]
 [ext_resource type="Texture2D" uid="uid://h56vnls332cm" path="res://assets/backgrounds/Andromeda_09-01-24-3.jpg" id="4_h8yg4"]
