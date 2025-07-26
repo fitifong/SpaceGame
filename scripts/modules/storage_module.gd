@@ -7,7 +7,7 @@ signal slot_updated(index)
 
 @onready var interaction_prompt: Control = $InteractionPrompt
 @onready var interaction_area: Area2D = $InteractionArea
-@onready var storage_ui_scene = preload("res://scenes/storage_container_ui.tscn")
+@onready var storage_ui_scene = preload("res://scenes/ui/module_ui/storage_container_ui.tscn")
 
 var inventory: Array = [
 	

@@ -21,11 +21,18 @@ aseprite_executable_path="C:/Program Files (x86)/Steam/steamapps/common/Aseprite
 
 [autoload]
 
-PlayerInventory="*res://scripts/player_inventory.gd"
-DragManager="*res://scripts/drag_manager.gd"
-UIManager="*res://scripts/ui_manager.gd"
-ShiftClickManager="*res://scripts/shift_click_manager.gd"
-ItemDatabase="*res://scripts/item_database.gd"
+PlayerInventory="*res://scripts/player/player_inventory.gd"
+DragManager="*res://scripts/ui_managers/drag_manager.gd"
+UIManager="*res://scripts/ui_managers/ui_manager.gd"
+ShiftClickManager="*res://scripts/ui_managers/shift_click_manager.gd"
+ItemDatabase="*res://scripts/databases/item_database.gd"
+FurnaceRecipeDatabase="*res://scripts/databases/furnace_recipe_database.gd"
+UiInteractionManager="*res://scripts/ui_managers/ui_interaction_manager.gd"
+
+[display]
+
+window/stretch/mode="viewport"
+window/stretch/scale_mode="integer"
 
 [dotnet]
 

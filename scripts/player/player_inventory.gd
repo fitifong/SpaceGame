@@ -3,7 +3,8 @@ extends Node
 signal slot_updated(index)
 
 var inventory: Array = [
-	{"id": 2, "quantity": 10}
+	{"id": 2, "quantity": 10},
+	{"id": 5, "quantity": 10},
 ]
 var inventory_size: int = 0
 var player_node: Node = null

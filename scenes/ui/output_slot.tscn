@@ -1,0 +1,37 @@
+[gd_scene load_steps=5 format=3 uid="uid://deucu334dn3e1"]
+
+[ext_resource type="Script" uid="uid://cufygsuftvt6n" path="res://scripts/ui_functionality/output_slot.gd" id="1_hth3k"]
+[ext_resource type="Texture2D" uid="uid://ciqj15q25pbxe" path="res://assets/UI Sprites/UI_slot.aseprite" id="2_h8cte"]
+[ext_resource type="Texture2D" uid="uid://dc8gh5naes00a" path="res://assets/items/copper_bar.aseprite" id="3_hth3k"]
+[ext_resource type="FontFile" uid="uid://bwdms2jowj8in" path="res://assets/fonts/DroidSans.ttf" id="4_ee8wh"]
+
+[node name="OutputSlot" type="Button"]
+self_modulate = Color(1, 1, 1, 0)
+custom_minimum_size = Vector2(64, 64)
+anchors_preset = -1
+anchor_right = 0.056
+anchor_bottom = 0.1
+offset_right = 0.487999
+offset_bottom = 0.199997
+script = ExtResource("1_hth3k")
+slot_type = "output"
+
+[node name="SlotSprite" type="Sprite2D" parent="."]
+position = Vector2(32, 32)
+scale = Vector2(2, 2)
+texture = ExtResource("2_h8cte")
+
+[node name="ItemIcon" type="Sprite2D" parent="SlotSprite"]
+position = Vector2(1.78814e-07, 1.78814e-07)
+texture = ExtResource("3_hth3k")
+
+[node name="ItemQuantity" type="Label" parent="SlotSprite"]
+offset_left = 4.0
+offset_top = 2.5
+offset_right = 24.0
+offset_bottom = 24.5
+scale = Vector2(0.483059, 0.483059)
+theme_override_colors/font_color = Color(0, 0, 0, 1)
+theme_override_fonts/font = ExtResource("4_ee8wh")
+theme_override_font_sizes/font_size = 18
+text = "99"

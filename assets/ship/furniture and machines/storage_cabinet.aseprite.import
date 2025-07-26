@@ -3,15 +3,15 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://dxhm78yiruftb"
-path="res://.godot/imported/storage_cabinet.aseprite-2d2a820ecadb24ab4885be946f496e36.ctex"
+path="res://.godot/imported/storage_cabinet.aseprite-ef4b5fd77dbf39b974687dcebc2822b1.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://assets/ship/storage_cabinet.aseprite"
-dest_files=["res://.godot/imported/storage_cabinet.aseprite-2d2a820ecadb24ab4885be946f496e36.ctex"]
+source_file="res://assets/ship/furniture and machines/storage_cabinet.aseprite"
+dest_files=["res://.godot/imported/storage_cabinet.aseprite-ef4b5fd77dbf39b974687dcebc2822b1.ctex"]
 
 [params]
 

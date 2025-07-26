@@ -1,7 +1,7 @@
 [gd_scene load_steps=6 format=3 uid="uid://r3kwlam405ca"]
 
-[ext_resource type="Script" uid="uid://cp48kkeai3j52" path="res://scripts/storage_module.gd" id="1_py1wb"]
-[ext_resource type="Texture2D" uid="uid://dxhm78yiruftb" path="res://assets/ship/storage_cabinet.aseprite" id="2_j4t6x"]
+[ext_resource type="Script" uid="uid://cp48kkeai3j52" path="res://scripts/modules/storage_module.gd" id="1_py1wb"]
+[ext_resource type="Texture2D" uid="uid://dxhm78yiruftb" path="res://assets/ship/furniture and machines/storage_cabinet.aseprite" id="2_j4t6x"]
 [ext_resource type="Texture2D" uid="uid://m12iecqgoog8" path="res://assets/icons/e_key.aseprite" id="3_e2hyo"]
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_vifye"]
@@ -11,7 +11,6 @@ size = Vector2(16, 14)
 radius = 17.0
 
 [node name="StorageCabinet" type="StaticBody2D"]
-position = Vector2(0, -16)
 script = ExtResource("1_py1wb")
 
 [node name="Sprite2D" type="Sprite2D" parent="."]

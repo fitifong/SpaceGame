@@ -1,0 +1,88 @@
+[gd_scene load_steps=5 format=3 uid="uid://rqryeiwjwbix"]
+
+[ext_resource type="Script" uid="uid://4tn82hfvkchg" path="res://scripts/modules/fabricator_ui.gd" id="1_34xt2"]
+[ext_resource type="Texture2D" uid="uid://cg0b6ps8xc0sq" path="res://assets/UI Sprites/StorageUI.aseprite" id="2_vcdtx"]
+[ext_resource type="PackedScene" uid="uid://dcakakdbeat4h" path="res://scenes/ui/slot_ui.tscn" id="3_woqvf"]
+[ext_resource type="PackedScene" uid="uid://deucu334dn3e1" path="res://scenes/ui/output_slot.tscn" id="4_15f5j"]
+
+[node name="FabricatorUI" type="Control"]
+layout_mode = 3
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -0.179962
+offset_right = 0.179962
+grow_horizontal = 2
+grow_vertical = 2
+script = ExtResource("1_34xt2")
+
+[node name="NinePatchRect" type="NinePatchRect" parent="."]
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -87.1799
+offset_top = -168.0
+offset_right = 313.82
+offset_bottom = 108.0
+grow_horizontal = 2
+grow_vertical = 2
+texture = ExtResource("2_vcdtx")
+region_rect = Rect2(0, 0, 234, 234)
+patch_margin_left = 50
+
+[node name="MakeButton" type="Button" parent="NinePatchRect"]
+layout_mode = 1
+anchors_preset = 5
+anchor_left = 0.5
+anchor_right = 0.5
+offset_left = 54.0
+offset_top = 111.0
+offset_right = 164.0
+offset_bottom = 154.0
+grow_horizontal = 2
+text = "Make
+"
+
+[node name="RecipeSelector" type="OptionButton" parent="NinePatchRect"]
+layout_mode = 0
+offset_left = 29.1799
+offset_top = 111.0
+offset_right = 229.18
+offset_bottom = 154.0
+
+[node name="GridContainer" type="GridContainer" parent="NinePatchRect"]
+layout_mode = 1
+anchors_preset = 5
+anchor_left = 0.5
+anchor_right = 0.5
+offset_left = -136.0
+offset_top = 26.0
+offset_right = 136.0
+offset_bottom = 244.0
+grow_horizontal = 2
+theme_override_constants/h_separation = 40
+theme_override_constants/v_separation = 90
+columns = 3
+
+[node name="InputSlot1" parent="NinePatchRect/GridContainer" instance=ExtResource("3_woqvf")]
+layout_mode = 2
+tooltip_text = "regular"
+
+[node name="InputSlot2" parent="NinePatchRect/GridContainer" instance=ExtResource("3_woqvf")]
+layout_mode = 2
+tooltip_text = "regular"
+
+[node name="InputSlot3" parent="NinePatchRect/GridContainer" instance=ExtResource("3_woqvf")]
+layout_mode = 2
+tooltip_text = "regular"
+
+[node name="Control" type="Control" parent="NinePatchRect/GridContainer"]
+layout_mode = 2
+
+[node name="OutputSlot" parent="NinePatchRect/GridContainer" instance=ExtResource("4_15f5j")]
+layout_mode = 2

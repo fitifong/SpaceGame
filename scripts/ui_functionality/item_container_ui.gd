@@ -1,8 +1,11 @@
 extends Control
 class_name ItemContainerUI
 
-@onready var slot_template = preload("res://scenes/slot_ui.tscn")
+@onready var slot_template = preload("res://scenes/ui/slot_ui.tscn")
+@onready var output_slot_template = preload("res://scenes/ui/output_slot.tscn")
 @onready var grid_container: GridContainer = null
+
+var slot_type_map := {}  # e.g. {0: "input", 1: "output"}
 
 # UI slot textures
 const UI_SLOT = preload("res://assets/UI Sprites/UI_slot.aseprite")
@@ -42,6 +45,9 @@ func find_grid_container(node: Node) -> GridContainer:
 				return found
 	return null
 
+func set_slot_type_map(map: Dictionary) -> void:
+	slot_type_map = map
+
 # ------------------------------------------------------------------
 # 🔵 INVENTORY UPDATES & UI HANDLING
 # ------------------------------------------------------------------
@@ -54,7 +60,12 @@ func _inventory_refresh():
 
 	var inv_size = inventory_data_ref.inventory.size()
 	for i in range(inv_size):
-		var slot = slot_template.instantiate()
+		var slot_type = slot_type_map.get(i, "input")  # default to input if not defined
+		var slot = null
+		if slot_type == "output":
+			slot = output_slot_template.instantiate()
+		else:
+			slot = slot_template.instantiate()
 		slot.gui_input.connect(_on_slot_gui_input.bind(slot))
 		grid_container.add_child(slot)
 
@@ -103,18 +114,18 @@ func _on_slot_gui_input(event: InputEvent, slot: Button):
 		
 	   # SHIFT + LEFT CLICK
 		if event.button_index == MOUSE_BUTTON_LEFT and Input.is_key_pressed(KEY_SHIFT):
-			ShiftClickManager.shift_click(self, index)  # 🔹 Calls ShiftClickManager
+			UiInteractionManager.shift_click(self, index)  # 🔹 Calls ShiftClickManager
 			return
 
 		# Otherwise do normal drag logic
-		if DragManager.dragging:
+		if UiInteractionManager.is_dragging():
 			if event.button_index == MOUSE_BUTTON_RIGHT:
-				DragManager.partial_drop(self, slot)
+				UiInteractionManager.partial_drop(self, slot)
 			elif event.button_index == MOUSE_BUTTON_LEFT:
-				DragManager.full_drop(self, slot)
+				UiInteractionManager.full_drop(self, slot)
 		else:
 			if event.button_index == MOUSE_BUTTON_LEFT or event.button_index == MOUSE_BUTTON_RIGHT:
-				DragManager.start_drag(self, slot, event)
+				UiInteractionManager.start_drag(self, slot, event)
 
 	
 
@@ -157,6 +168,13 @@ func get_slot_index(slot: Control) -> int:
 			if grid_container.get_child(i) == slot:
 				return i
 	return -1
+
+func get_slot_button(index: int) -> Button:
+	if grid_container and index >= 0 and index < grid_container.get_child_count():
+		var slot = grid_container.get_child(index)
+		if slot is Button:
+			return slot
+	return null
 
 func get_slot_under_mouse() -> Button:
 	var mouse_pos = get_viewport().get_mouse_position()

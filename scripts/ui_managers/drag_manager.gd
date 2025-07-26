@@ -16,11 +16,7 @@ var original_source_index: int = -1
 
 # Floating visual for the dragged item.
 var dragged_visual: Control = null
-var dragged_item_scene: PackedScene = preload("res://scenes/dragged_item.tscn")
-
-# Hold threshold parameters (milliseconds)
-var hold_threshold_ms: int = 300
-var hold_start_time: int = 0
+var dragged_item_scene: PackedScene = preload("res://scenes/ui/dragged_item.tscn")
 
 
 # ------------------------------------------------------------------
@@ -89,9 +85,6 @@ func start_drag(container: ItemContainerUI, slot_button: Button, event: InputEve
 
 	dragging = true
 	
-	# Record the time when the drag started.
-	hold_start_time = Time.get_ticks_msec()
-	
 	# Refresh UI so the source slot now shows the updated (reduced or empty) stack.
 	container.update_slot(index)
 
@@ -138,6 +131,9 @@ func partial_drop(container: ItemContainerUI, slot_button: Button):
 
 	var index = container.get_slot_index(slot_button)
 	if index < 0:
+		return
+		
+	if slot_button.slot_type == "output":
 		return
 
 	var inv_manager = container.inventory_data_ref
@@ -198,6 +194,9 @@ func full_drop(container: ItemContainerUI, slot_button: Button):
 	var index = container.get_slot_index(slot_button)
 	if index < 0:
 		return
+		
+	if slot_button.slot_type == "output":
+		return
 
 	var inv_manager = container.inventory_data_ref
 	var dest_item = inv_manager.inventory[index]
@@ -224,6 +223,10 @@ func full_drop(container: ItemContainerUI, slot_button: Button):
 			var deposit = min(drag_data["quantity"], capacity_left)
 			dest_item["quantity"] += deposit
 			drag_data["quantity"] -= deposit
+			
+			if dragged_visual:
+				dragged_visual.get_node("ItemQuantity").text = str(drag_data["quantity"])
+			
 		else:
 			# Different item: swap the dragged item with the slot's item.
 			var temp_item = {
@@ -252,106 +255,6 @@ func full_drop(container: ItemContainerUI, slot_button: Button):
 	if drag_data["quantity"] <= 0:
 		end_drag()
 	# Otherwise, the drag continues with any leftover quantity.
-
-# ------------------------------------------------------------------
-# 🔴 HOLD RELEASE & HOLD DRAG LOGIC
-# ------------------------------------------------------------------
-# This function is called when the left mouse button is released.
-# - If no slot is under the mouse, cancel the drag.
-# - If released over the source slot, cancel and reinitiate a normal drag.
-# - Otherwise, use the hold_drag logic.
-
-func handle_left_release(container: ItemContainerUI, slot_button: Button) -> void:
-	if slot_button == null:
-		cancel_drag()
-		return
-
-	var index = container.get_slot_index(slot_button)
-	if index < 0:
-		cancel_drag()
-		return
-
-	# If released over the original source slot, cancel and restart a normal drag.
-	if container == original_source_container and index == original_source_index:
-		cancel_drag()
-		var fake_event = InputEventMouseButton.new()
-		fake_event.button_index = MOUSE_BUTTON_LEFT
-		fake_event.pressed = true
-		start_drag(container, slot_button, fake_event)
-		return
-
-	# Otherwise, perform the custom hold-based drop.
-	hold_drag(container, slot_button)
-
-# Implements the custom hold-based drop behavior.
-func hold_drag(container: ItemContainerUI, slot_button: Button) -> void:
-	if not dragging:
-		return
-
-	var index = container.get_slot_index(slot_button)
-	if index < 0:
-		cancel_drag()
-		return
-
-	var inv_manager = container.inventory_data_ref
-	var dest_item = inv_manager.inventory[index]
-
-	# Case 1: Destination slot is empty.
-	if dest_item == null:
-		var deposit = min(drag_data["quantity"], 99)
-		inv_manager.inventory[index] = {
-			"id": drag_data["id"],
-			"quantity": deposit
-		}
-		var leftover = drag_data["quantity"] - deposit
-		if leftover > 0 and original_source_container:
-			var src_index = original_source_index
-			original_source_container.inventory_data_ref.inventory[src_index] = {
-				"id": drag_data["id"],
-				"quantity": leftover
-			}
-			original_source_container.update_slot(src_index)
-		container.update_slot(index)
-		end_drag()
-		return
-
-	# Case 2: Destination slot has the same item.
-	if dest_item["id"] == drag_data["id"]:
-		var capacity = 99 - dest_item["quantity"]
-		var deposit = min(drag_data["quantity"], capacity)
-		dest_item["quantity"] += deposit
-		var leftover = drag_data["quantity"] - deposit
-		if leftover > 0 and original_source_container:
-			var src_index = original_source_index
-			original_source_container.inventory_data_ref.inventory[src_index] = {
-				"id": drag_data["id"],
-				"quantity": leftover
-			}
-			original_source_container.update_slot(src_index)
-		container.update_slot(index)
-		end_drag()
-		return
-
-	# Case 3: Destination slot holds a different item; swap and end the drag.
-	var temp_item = {
-		"id": dest_item["id"],
-		"quantity": dest_item["quantity"]
-	}
-	dest_item["id"] = drag_data["id"]
-	dest_item["quantity"] = drag_data["quantity"]
-
-	drag_data["id"] = temp_item["id"]
-	drag_data["quantity"] = temp_item["quantity"]
-
-	var item_data = ItemDatabase.get_item_data(drag_data["id"])
-	if item_data:
-		dragged_visual.get_node("ItemIcon").texture = item_data["texture"]
-	else:
-		dragged_visual.get_node("ItemIcon").texture = null
-	dragged_visual.get_node("ItemQuantity").text = str(drag_data["quantity"])
-
-	container.update_slot(index)
-	end_drag()
 
 # ------------------------------------------------------------------
 # 🔴 ENDING DRAG & PER-FRAME UPDATE

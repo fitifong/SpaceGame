@@ -24,7 +24,19 @@ var items = {
 		"texture": preload("res://assets/items/iron_bar.aseprite"),
 		"type": "material",
 		"default_quantity": 1
-	}
+	},
+	5: {
+		"name": "Copper Ore",
+		"texture": preload("res://assets/items/copper_ore.aseprite"),
+		"type": "raw_material",
+		"default_quantity": 1
+	},
+	6: {
+		"name": "Copper Bar",
+		"texture": preload("res://assets/items/copper_bar.aseprite"),
+		"type": "material",
+		"default_quantity": 1
+	},
 }
 
 func get_item_data(item_id):
