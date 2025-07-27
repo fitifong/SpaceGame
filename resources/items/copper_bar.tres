@@ -1,0 +1,13 @@
+[gd_resource type="Resource" script_class="ItemResource" load_steps=3 format=3 uid="uid://bvrkfs870mqul"]
+
+[ext_resource type="Script" uid="uid://by2c2bn6gvm1" path="res://scripts/databases/item_resource.gd" id="1_il464"]
+[ext_resource type="Texture2D" uid="uid://dc8gh5naes00a" path="res://assets/items/copper_bar.aseprite" id="2_nkuap"]
+
+[resource]
+script = ExtResource("1_il464")
+id = 6
+name = "Copper Bar"
+texture = ExtResource("2_nkuap")
+item_type = "material"
+quantity = 1
+metadata/_custom_type_script = "uid://by2c2bn6gvm1"

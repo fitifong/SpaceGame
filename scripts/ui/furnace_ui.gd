@@ -25,8 +25,8 @@ func set_inventory_ref(ref) -> void:
 	update_smelt_button_visuals()
 
 	# If there's a current recipe and the timer is > 0, restore the bar
-	if not inventory_data_ref.current_recipe.is_empty() and inventory_data_ref.smelt_timer > 0:
-		var percent = inventory_data_ref.smelt_timer / inventory_data_ref.current_recipe["smelt_time"]
+	if inventory_data_ref.current_recipe != null and inventory_data_ref.smelt_timer > 0:
+		var percent = inventory_data_ref.smelt_timer / inventory_data_ref.current_recipe.smelt_time
 		update_progress_bar(percent)
 	else:
 		# Or, if you want to hide it when there's no partial smelt in progress, do:

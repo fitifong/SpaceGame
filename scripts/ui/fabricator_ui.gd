@@ -1,14 +1,10 @@
 extends ItemContainerUI
 class_name FabricatorUI
 
-@onready var make_button: Button = $NinePatchRect/MakeButton
-@onready var recipe_selector: OptionButton = $NinePatchRect/RecipeSelector
-@onready var input_slots: Array = [
-	$NinePatchRect/GridContainer/InputSlot1,
-	$NinePatchRect/GridContainer/InputSlot2,
-	$NinePatchRect/GridContainer/InputSlot3,
-]
-@onready var output_slot: Button = $NinePatchRect/GridContainer/OutputSlot
+@export var make_button: Button
+@export var recipe_selector: OptionButton
+@export var input_slots: Array[Button] = []
+@export var output_slot: Button
 
 func _ready():
 	add_to_group("interactable_ui")

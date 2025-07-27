@@ -1,8 +1,12 @@
-[gd_scene load_steps=4 format=3 uid="uid://cqc0kl5wqtjj5"]
+[gd_scene load_steps=8 format=3 uid="uid://cqc0kl5wqtjj5"]
 
-[ext_resource type="Script" uid="uid://dw10sh07taf72" path="res://scripts/modules/storage_container_ui.gd" id="1_mkw8w"]
+[ext_resource type="Script" uid="uid://dw10sh07taf72" path="res://scripts/ui/storage_container_ui.gd" id="1_mkw8w"]
 [ext_resource type="Texture2D" uid="uid://cg0b6ps8xc0sq" path="res://assets/UI Sprites/StorageUI.aseprite" id="2_fryjc"]
+[ext_resource type="PackedScene" uid="uid://deucu334dn3e1" path="res://scenes/ui/output_slot.tscn" id="3_advo5"]
 [ext_resource type="PackedScene" uid="uid://dcakakdbeat4h" path="res://scenes/ui/slot_ui.tscn" id="3_prtex"]
+[ext_resource type="Texture2D" uid="uid://ciqj15q25pbxe" path="res://assets/UI Sprites/UI_slot.aseprite" id="4_h5c5e"]
+[ext_resource type="Texture2D" uid="uid://dw04xym0a8jwg" path="res://assets/UI Sprites/UI_slot_hover.aseprite" id="5_innxp"]
+[ext_resource type="Texture2D" uid="uid://d1bmo5puicbva" path="res://assets/UI Sprites/UI_slot_drag.aseprite" id="6_ak48d"]
 
 [node name="StorageContainerUI" type="Control"]
 layout_mode = 3
@@ -18,6 +22,11 @@ offset_bottom = 215.0
 grow_horizontal = 2
 grow_vertical = 2
 script = ExtResource("1_mkw8w")
+slot_template = ExtResource("3_prtex")
+output_slot_template = ExtResource("3_advo5")
+ui_slot = ExtResource("4_h5c5e")
+ui_slot_hover = ExtResource("5_innxp")
+ui_slot_drag = ExtResource("6_ak48d")
 
 [node name="NinePatchRect" type="NinePatchRect" parent="."]
 layout_mode = 1

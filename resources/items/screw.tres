@@ -1,0 +1,13 @@
+[gd_resource type="Resource" script_class="ItemResource" load_steps=3 format=3 uid="uid://c8s2a60tidrnb"]
+
+[ext_resource type="Script" uid="uid://by2c2bn6gvm1" path="res://scripts/databases/item_resource.gd" id="1_llifr"]
+[ext_resource type="Texture2D" uid="uid://y86bdcyf6rr" path="res://assets/items/screw.aseprite" id="2_m4i7m"]
+
+[resource]
+script = ExtResource("1_llifr")
+id = 0
+name = "Screw"
+texture = ExtResource("2_m4i7m")
+item_type = "component"
+quantity = 1
+metadata/_custom_type_script = "uid://by2c2bn6gvm1"

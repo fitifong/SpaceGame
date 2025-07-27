@@ -1,22 +1,34 @@
-[gd_scene load_steps=5 format=3 uid="uid://rqryeiwjwbix"]
+[gd_scene load_steps=8 format=3 uid="uid://rqryeiwjwbix"]
 
-[ext_resource type="Script" uid="uid://4tn82hfvkchg" path="res://scripts/modules/fabricator_ui.gd" id="1_34xt2"]
+[ext_resource type="Script" uid="uid://4tn82hfvkchg" path="res://scripts/ui/fabricator_ui.gd" id="1_34xt2"]
 [ext_resource type="Texture2D" uid="uid://cg0b6ps8xc0sq" path="res://assets/UI Sprites/StorageUI.aseprite" id="2_vcdtx"]
 [ext_resource type="PackedScene" uid="uid://dcakakdbeat4h" path="res://scenes/ui/slot_ui.tscn" id="3_woqvf"]
 [ext_resource type="PackedScene" uid="uid://deucu334dn3e1" path="res://scenes/ui/output_slot.tscn" id="4_15f5j"]
+[ext_resource type="Texture2D" uid="uid://ciqj15q25pbxe" path="res://assets/UI Sprites/UI_slot.aseprite" id="4_woqvf"]
+[ext_resource type="Texture2D" uid="uid://dw04xym0a8jwg" path="res://assets/UI Sprites/UI_slot_hover.aseprite" id="5_15f5j"]
+[ext_resource type="Texture2D" uid="uid://d1bmo5puicbva" path="res://assets/UI Sprites/UI_slot_drag.aseprite" id="6_akipx"]
 
-[node name="FabricatorUI" type="Control"]
+[node name="FabricatorUI" type="Control" node_paths=PackedStringArray("make_button", "recipe_selector", "input_slots", "output_slot")]
 layout_mode = 3
 anchors_preset = 8
 anchor_left = 0.5
 anchor_top = 0.5
 anchor_right = 0.5
 anchor_bottom = 0.5
-offset_left = -0.179962
+offset_left = -0.179932
 offset_right = 0.179962
 grow_horizontal = 2
 grow_vertical = 2
 script = ExtResource("1_34xt2")
+make_button = NodePath("NinePatchRect/MakeButton")
+recipe_selector = NodePath("NinePatchRect/RecipeSelector")
+input_slots = [NodePath("NinePatchRect/GridContainer/InputSlot1"), NodePath("NinePatchRect/GridContainer/InputSlot2"), NodePath("NinePatchRect/GridContainer/InputSlot3")]
+output_slot = NodePath("NinePatchRect/GridContainer/OutputSlot")
+slot_template = ExtResource("3_woqvf")
+output_slot_template = ExtResource("4_15f5j")
+ui_slot = ExtResource("4_woqvf")
+ui_slot_hover = ExtResource("5_15f5j")
+ui_slot_drag = ExtResource("6_akipx")
 
 [node name="NinePatchRect" type="NinePatchRect" parent="."]
 layout_mode = 1

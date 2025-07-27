@@ -1,6 +1,7 @@
-[gd_scene load_steps=6 format=3 uid="uid://r3kwlam405ca"]
+[gd_scene load_steps=7 format=3 uid="uid://r3kwlam405ca"]
 
 [ext_resource type="Script" uid="uid://cp48kkeai3j52" path="res://scripts/modules/storage_module.gd" id="1_py1wb"]
+[ext_resource type="PackedScene" uid="uid://cqc0kl5wqtjj5" path="res://scenes/ui/module_ui/storage_container_ui.tscn" id="2_a44nk"]
 [ext_resource type="Texture2D" uid="uid://dxhm78yiruftb" path="res://assets/ship/furniture and machines/storage_cabinet.aseprite" id="2_j4t6x"]
 [ext_resource type="Texture2D" uid="uid://m12iecqgoog8" path="res://assets/icons/e_key.aseprite" id="3_e2hyo"]
 
@@ -10,8 +11,11 @@ size = Vector2(16, 14)
 [sub_resource type="CircleShape2D" id="CircleShape2D_e8qio"]
 radius = 17.0
 
-[node name="StorageCabinet" type="StaticBody2D"]
+[node name="StorageCabinet" type="StaticBody2D" node_paths=PackedStringArray("interaction_prompt", "interaction_area")]
 script = ExtResource("1_py1wb")
+storage_ui_scene = ExtResource("2_a44nk")
+interaction_prompt = NodePath("InteractionPrompt")
+interaction_area = NodePath("InteractionArea")
 
 [node name="Sprite2D" type="Sprite2D" parent="."]
 texture = ExtResource("2_j4t6x")

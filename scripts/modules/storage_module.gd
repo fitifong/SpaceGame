@@ -5,13 +5,12 @@ signal module_opened(ui_instance)
 signal closed
 signal slot_updated(index)
 
-@onready var interaction_prompt: Control = $InteractionPrompt
-@onready var interaction_area: Area2D = $InteractionArea
-@onready var storage_ui_scene = preload("res://scenes/ui/module_ui/storage_container_ui.tscn")
+@export var storage_ui_scene: PackedScene
+@export var interaction_prompt: Control
+@export var interaction_area: Area2D
 
-var inventory: Array = [
-	
-]
+var inventory: Array = []
+
 var inventory_size: int = 0
 var ui_instance: Control = null  # Instance of the storage UI
 # ----------------- 🟢 INITIALIZATION ----------------- #
@@ -48,14 +47,14 @@ func open():
 			return  
 
 		interaction_prompt.visible = false
-		var gui_layer = get_node("/root/Game/GUIs")
 		ui_instance = storage_ui_scene.instantiate()
-		gui_layer.add_child(ui_instance)
+		ui_instance.player_inventory_ui = UIManager.get_inventory_ui()  # ✅ Inject dependency
+		ui_instance.inventory_data_ref = self  # ✅ Let the UI show our inventory
+		UIManager.add_ui(ui_instance)
 		
 		UIManager.register_ui(ui_instance)  # Register the storage UI
 		
 		# Set the inventory reference
-		ui_instance.inventory_data_ref = self
 		module_opened.emit(ui_instance)
 
 # Closes the storage UI and cleans up references

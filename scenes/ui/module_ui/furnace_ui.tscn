@@ -1,10 +1,13 @@
-[gd_scene load_steps=18 format=3 uid="uid://cc7ykjmq6tebr"]
+[gd_scene load_steps=21 format=3 uid="uid://cc7ykjmq6tebr"]
 
-[ext_resource type="Script" uid="uid://c8a788ivibv8e" path="res://scripts/modules/furnace_ui.gd" id="1_ltdxc"]
+[ext_resource type="Script" uid="uid://c8a788ivibv8e" path="res://scripts/ui/furnace_ui.gd" id="1_ltdxc"]
 [ext_resource type="Texture2D" uid="uid://cg0b6ps8xc0sq" path="res://assets/UI Sprites/StorageUI.aseprite" id="2_85je4"]
 [ext_resource type="PackedScene" uid="uid://dcakakdbeat4h" path="res://scenes/ui/slot_ui.tscn" id="3_c7nuh"]
 [ext_resource type="PackedScene" uid="uid://deucu334dn3e1" path="res://scenes/ui/output_slot.tscn" id="4_hlov0"]
+[ext_resource type="Texture2D" uid="uid://ciqj15q25pbxe" path="res://assets/UI Sprites/UI_slot.aseprite" id="4_s1t2i"]
 [ext_resource type="Texture2D" uid="uid://bm8x18inuo6js" path="res://assets/UI Sprites/progress_bar.aseprite" id="5_85je4"]
+[ext_resource type="Texture2D" uid="uid://dw04xym0a8jwg" path="res://assets/UI Sprites/UI_slot_hover.aseprite" id="5_dxaah"]
+[ext_resource type="Texture2D" uid="uid://d1bmo5puicbva" path="res://assets/UI Sprites/UI_slot_drag.aseprite" id="6_kxmqh"]
 
 [sub_resource type="AtlasTexture" id="AtlasTexture_c7nuh"]
 atlas = ExtResource("5_85je4")
@@ -108,6 +111,11 @@ offset_right = 0.179962
 grow_horizontal = 2
 grow_vertical = 2
 script = ExtResource("1_ltdxc")
+slot_template = ExtResource("3_c7nuh")
+output_slot_template = ExtResource("4_hlov0")
+ui_slot = ExtResource("4_s1t2i")
+ui_slot_hover = ExtResource("5_dxaah")
+ui_slot_drag = ExtResource("6_kxmqh")
 
 [node name="NinePatchRect" type="NinePatchRect" parent="."]
 layout_mode = 1

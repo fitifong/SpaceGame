@@ -1,10 +1,20 @@
 extends Node
+class_name FurnaceRecipeDatabase
 
-# Maps input item ID → output item ID
-var recipes := {
-	2: { "output_id": 4, "smelt_time": 10.0 },  # iron ore, iron bar
-	5: { "output_id": 6, "smelt_time": 6.0 },  # copper ore, copper bar
-}
+var recipes: Array[FurnaceRecipe] = []
 
-func get_recipe(input_id: int) -> Dictionary:
-	return recipes.get(input_id, {})
+# Called when the FurnaceModule opens the UI
+func load_all_recipes():
+	recipes.clear()
+	var dir = DirAccess.open("res://resources/recipes/furnace_recipes/")
+	if dir:
+		dir.list_dir_begin()
+		var file_name = dir.get_next()
+		while file_name != "":
+			if file_name.ends_with(".tres") or file_name.ends_with(".res"):
+				var path = "res://resources/recipes/furnace_recipes/" + file_name
+				var recipe = load(path)
+				if recipe is FurnaceRecipe:
+					recipes.append(recipe)
+			file_name = dir.get_next()
+		dir.list_dir_end()

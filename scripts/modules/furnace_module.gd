@@ -6,13 +6,15 @@ signal closed
 signal slot_updated(index)
 signal smelt_progress_updated(progress: float)
 
-@onready var interaction_prompt: Control = $InteractionPrompt
-@onready var interaction_area: Area2D     = $InteractionArea
-@onready var furnace_ui_scene            = preload("res://scenes/ui/module_ui/furnace_ui.tscn")
+@export var interaction_prompt: Control
+@export var interaction_area: Area2D
+@export var furnace_ui_scene: PackedScene
 
-var is_smelting       := false
-var smelt_timer       := 0.0
-var current_recipe    := {}
+@onready var recipe_db := FurnaceRecipeDatabase.new()
+
+var is_smelting := false
+var smelt_timer := 0.0
+var current_recipe: FurnaceRecipe
 var reserved_input: Dictionary = {}  # the ore/ingredient being smelted right now
 
 var inventory: Array  = []
@@ -24,6 +26,7 @@ func _ready():
 	interaction_prompt.z_index = 999
 	interaction_prompt.visible = false
 	set_inventory_size(2)
+	recipe_db.load_all_recipes()
 
 	# Connect our own slot_updated signal so we can cancel mid-process
 	if not is_connected("slot_updated", Callable(self, "_on_slot_updated")):
@@ -47,6 +50,11 @@ func get_slot_index_by_type(slot_type: String) -> int:
 	# Fallback default: input = 0, output = 1
 	return 0 if slot_type == "input" else 1
 
+func get_recipe(item: ItemResource) -> FurnaceRecipe:
+	for recipe in recipe_db.recipes:
+		if recipe.input_item == item:
+			return recipe
+	return null
 
 # Called both by the module (when inventory changes) and by UI for visuals
 func _on_slot_updated(index: int) -> void:
@@ -58,7 +66,7 @@ func _on_slot_updated(index: int) -> void:
 func cancel_smelting() -> void:
 	is_smelting = false
 	smelt_timer = 0.0
-	current_recipe = {}
+	current_recipe = null
 	reserved_input = {}
 	smelt_progress_updated.emit(0.0)
 
@@ -87,7 +95,7 @@ func _process(delta: float) -> void:
 	# 3) If we are mid-smelt, advance it
 	if not reserved_input.is_empty():
 		var recipe    = current_recipe
-		var output_id = recipe["output_id"]      # <— declare it here
+		var output_id = recipe.output_item      # <— declare it here
 		smelt_timer  += delta
 
 		if smelt_timer >= recipe["smelt_time"]:
@@ -118,7 +126,7 @@ func _process(delta: float) -> void:
 			# --- Finalize this smelt cycle ---
 			smelt_timer      = 0.0
 			reserved_input   = {}
-			current_recipe   = {}
+			current_recipe   = null
 
 			# Hide bar and stop if no more input
 			var refreshed = inventory[in_index]
@@ -134,8 +142,10 @@ func _process(delta: float) -> void:
 
 	# 4) Start a fresh smelt if input is valid
 	if input_item != null and input_item["quantity"] > 0:
-		var recipe = FurnaceRecipeDatabase.get_recipe(input_item["id"])
-		if recipe == null or not recipe.has("smelt_time"):
+		var recipe = get_recipe(input_item["id"])
+		if recipe == null:
+			return
+		if typeof(recipe.smelt_time) != TYPE_FLOAT or recipe.smelt_time <= 0.0:
 			# No smelt recipe—do nothing
 			return
 
@@ -165,9 +175,8 @@ func open():
 			return
 
 		interaction_prompt.visible = false
-		var gui_layer = get_node("/root/Game/GUIs")
 		ui_instance = furnace_ui_scene.instantiate()
-		gui_layer.add_child(ui_instance)
+		UIManager.add_ui(ui_instance)
 		
 		UIManager.register_ui(ui_instance)
 		ui_instance.set_inventory_ref(self)

@@ -1,5 +1,7 @@
 extends Node
 
+@export var ui_root: Node  # Drag your "GUIs" node into this in the editor
+
 var active_ui_containers: Array = []
 
 # ----------------- 🟢 REGISTERING UI ELEMENTS ----------------- #
@@ -11,6 +13,12 @@ func unregister_ui(ui: Control) -> void:
 	if ui in active_ui_containers:
 		active_ui_containers.erase(ui)
 
+func add_ui(ui: Control) -> void:
+	if ui_root:
+		ui_root.add_child(ui)
+	else:
+		push_error("[UIManager] ui_root not assigned. Cannot parent UI.")
+
 # ----------------- 🔵 RETRIEVING ACTIVE UI ----------------- #
 func get_active_ui() -> Control:
 	# Return the first open UI that isn't the player inventory
@@ -18,6 +26,12 @@ func get_active_ui() -> Control:
 		if ui.visible:
 			return ui
 	return null  # No valid UI found
+
+func get_inventory_ui() -> PlayerInventoryUI:
+	for ui in active_ui_containers:
+		if ui is PlayerInventoryUI:
+			return ui
+	return null
 
 func is_ui_active() -> bool:
 	return active_ui_containers.size() > 0

@@ -1,0 +1,13 @@
+[gd_resource type="Resource" script_class="ItemResource" load_steps=3 format=3 uid="uid://i4uufv4ty8st"]
+
+[ext_resource type="Script" uid="uid://by2c2bn6gvm1" path="res://scripts/databases/item_resource.gd" id="1_yts71"]
+[ext_resource type="Texture2D" uid="uid://d0mpm73ahhncy" path="res://assets/items/copper_ore.aseprite" id="2_xprar"]
+
+[resource]
+script = ExtResource("1_yts71")
+id = 5
+name = "Copper Ore"
+texture = ExtResource("2_xprar")
+item_type = "raw_material"
+quantity = 1
+metadata/_custom_type_script = "uid://by2c2bn6gvm1"

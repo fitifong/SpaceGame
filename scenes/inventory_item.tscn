@@ -1,12 +1,14 @@
-[gd_scene load_steps=4 format=3 uid="uid://dtyhf0ivgfneu"]
+[gd_scene load_steps=5 format=3 uid="uid://dtyhf0ivgfneu"]
 
 [ext_resource type="Script" uid="uid://cc4abnjnlquuv" path="res://scripts/world_interactions/inventory_item.gd" id="1_j5i74"]
 [ext_resource type="Texture2D" uid="uid://y86bdcyf6rr" path="res://assets/items/screw.aseprite" id="2_lu2o0"]
+[ext_resource type="Resource" uid="uid://c8s2a60tidrnb" path="res://resources/items/screw.tres" id="2_y87vu"]
 
 [sub_resource type="CircleShape2D" id="CircleShape2D_2oiuj"]
 
 [node name="InventoryItem" type="Node2D" groups=["items"]]
 script = ExtResource("1_j5i74")
+item_id = ExtResource("2_y87vu")
 
 [node name="Area2D" type="Area2D" parent="."]
 

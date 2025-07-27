@@ -1,7 +1,8 @@
-[gd_scene load_steps=6 format=3 uid="uid://cl71xkt5rpfnk"]
+[gd_scene load_steps=7 format=3 uid="uid://cl71xkt5rpfnk"]
 
 [ext_resource type="Script" uid="uid://brx2k3gy1cpqs" path="res://scripts/modules/furnace_module.gd" id="1_5dplh"]
 [ext_resource type="Texture2D" uid="uid://cgieg1kwawdpg" path="res://assets/ship/furniture and machines/furnace.aseprite" id="2_5dplh"]
+[ext_resource type="PackedScene" uid="uid://cc7ykjmq6tebr" path="res://scenes/ui/module_ui/furnace_ui.tscn" id="2_mei3d"]
 [ext_resource type="Texture2D" uid="uid://m12iecqgoog8" path="res://assets/icons/e_key.aseprite" id="3_s82ge"]
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_vifye"]
@@ -10,8 +11,11 @@ size = Vector2(16, 14)
 [sub_resource type="CircleShape2D" id="CircleShape2D_e8qio"]
 radius = 17.0
 
-[node name="Furnace" type="StaticBody2D"]
+[node name="Furnace" type="StaticBody2D" node_paths=PackedStringArray("interaction_prompt", "interaction_area")]
 script = ExtResource("1_5dplh")
+interaction_prompt = NodePath("InteractionPrompt")
+interaction_area = NodePath("InteractionArea")
+furnace_ui_scene = ExtResource("2_mei3d")
 
 [node name="Sprite2D" type="Sprite2D" parent="."]
 texture = ExtResource("2_5dplh")

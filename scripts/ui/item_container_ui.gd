@@ -1,16 +1,16 @@
 extends Control
 class_name ItemContainerUI
 
-@onready var slot_template = preload("res://scenes/ui/slot_ui.tscn")
-@onready var output_slot_template = preload("res://scenes/ui/output_slot.tscn")
+@export var slot_template: PackedScene
+@export var output_slot_template: PackedScene
 @onready var grid_container: GridContainer = null
 
-var slot_type_map := {}  # e.g. {0: "input", 1: "output"}
-
 # UI slot textures
-const UI_SLOT = preload("res://assets/UI Sprites/UI_slot.aseprite")
-const UI_SLOT_HOVER = preload("res://assets/UI Sprites/UI_slot_hover.aseprite")
-const UI_SLOT_DRAG = preload("res://assets/UI Sprites/UI_slot_drag.aseprite")
+@export var ui_slot: Texture2D
+@export var ui_slot_hover: Texture2D
+@export var ui_slot_drag: Texture2D
+
+var slot_type_map := {}  # e.g. {0: "input", 1: "output"}
 
 # Reference to an InventoryManager for this container (e.g. player inv, storage inv)
 var inventory_data_ref = null
@@ -137,7 +137,7 @@ func _process(_delta):
 	
 	for i in range(grid_container.get_child_count()):
 		var slot = grid_container.get_child(i)
-		var slot_sprite = slot.get_node_or_null("SlotSprite")
+		var slot_sprite = slot.get_slot_sprite()
 		if not slot_sprite:
 			continue
 
@@ -150,11 +150,11 @@ func _process(_delta):
 				is_drag_source = true
 
 		if is_drag_source:
-			slot_sprite.texture = UI_SLOT_DRAG
+			slot_sprite.texture = ui_slot_drag
 		elif slot == hovered_slot:
-			slot_sprite.texture = UI_SLOT_HOVER
+			slot_sprite.texture = ui_slot_hover
 		else:
-			slot_sprite.texture = UI_SLOT
+			slot_sprite.texture = ui_slot
 
 
 # ------------------------------------------------------------------
@@ -202,23 +202,26 @@ func get_active_other_ui() -> ItemContainerUI:
 # ------------------------------------------------------------------
 func set_empty(slot: Button):
 	if slot:
-		var icon = slot.get_node_or_null("SlotSprite/ItemIcon")
-		var quantity = slot.get_node_or_null("SlotSprite/ItemQuantity")
+		var icon = slot.get_icon()
+		var quantity = slot.get_quantity()
 		if icon:
 			icon.texture = null
 		if quantity:
 			quantity.text = ""
 
-func set_item(slot: Button, new_item: Dictionary):
-	if slot:
-		var icon = slot.get_node_or_null("SlotSprite/ItemIcon")
-		var quantity_label = slot.get_node_or_null("SlotSprite/ItemQuantity")
-		if icon:
-			# Retrieve the full item data from the centralized database using the item's ID.
-			var item_data = ItemDatabase.get_item_data(new_item["id"])
-			if item_data:
-				icon.texture = item_data["texture"]
-			else:
-				icon.texture = null
-		if quantity_label:
-			quantity_label.text = str(new_item["quantity"])
+func set_item(slot: Button, new_item: Dictionary) -> void:
+	if slot == null:
+		return
+
+	var icon      = slot.get_icon()
+	var quantity  = slot.get_quantity()
+	var item_res  = new_item.get("id", null)
+
+	if icon:
+		if item_res is ItemResource:
+			icon.texture = item_res.texture
+		else:
+			icon.texture = null
+
+	if quantity:
+		quantity.text = str(new_item.get("quantity", 0))

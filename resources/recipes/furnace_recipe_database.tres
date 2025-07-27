@@ -1,0 +1,7 @@
+[gd_resource type="Resource" script_class="FurnaceRecipeDatabase" load_steps=2 format=3 uid="uid://d0ed2knpip8im"]
+
+[ext_resource type="Script" uid="uid://cxhegtqksvekk" path="res://scripts/databases/furnace_recipe_database.gd" id="2_l2ry8"]
+
+[resource]
+script = ExtResource("2_l2ry8")
+metadata/_custom_type_script = "uid://cxhegtqksvekk"

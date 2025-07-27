@@ -1,36 +1,37 @@
-[gd_scene load_steps=25 format=3 uid="uid://bexmlc645gjlq"]
+[gd_scene load_steps=26 format=3 uid="uid://bexmlc645gjlq"]
 
 [ext_resource type="Script" uid="uid://bk3by3ciokecr" path="res://scripts/modules/fabricator_module.gd" id="1_0whxp"]
 [ext_resource type="Texture2D" uid="uid://ckj1el0clb2ql" path="res://assets/ship/furniture and machines/fabricator.aseprite" id="2_0whxp"]
+[ext_resource type="PackedScene" uid="uid://rqryeiwjwbix" path="res://scenes/ui/module_ui/fabricator_ui.tscn" id="2_728py"]
 [ext_resource type="Texture2D" uid="uid://m12iecqgoog8" path="res://assets/icons/e_key.aseprite" id="3_667xo"]
 
-[sub_resource type="AtlasTexture" id="AtlasTexture_3kqk8"]
+[sub_resource type="AtlasTexture" id="AtlasTexture_728py"]
 atlas = ExtResource("2_0whxp")
-region = Rect2(288, 0, 48, 32)
-
-[sub_resource type="AtlasTexture" id="AtlasTexture_c43vg"]
-atlas = ExtResource("2_0whxp")
-region = Rect2(240, 0, 48, 32)
-
-[sub_resource type="AtlasTexture" id="AtlasTexture_4ffks"]
-atlas = ExtResource("2_0whxp")
-region = Rect2(192, 0, 48, 32)
-
-[sub_resource type="AtlasTexture" id="AtlasTexture_nsufb"]
-atlas = ExtResource("2_0whxp")
-region = Rect2(144, 0, 48, 32)
-
-[sub_resource type="AtlasTexture" id="AtlasTexture_eh7br"]
-atlas = ExtResource("2_0whxp")
-region = Rect2(96, 0, 48, 32)
+region = Rect2(0, 0, 48, 32)
 
 [sub_resource type="AtlasTexture" id="AtlasTexture_667xo"]
 atlas = ExtResource("2_0whxp")
 region = Rect2(48, 0, 48, 32)
 
-[sub_resource type="AtlasTexture" id="AtlasTexture_728py"]
+[sub_resource type="AtlasTexture" id="AtlasTexture_eh7br"]
 atlas = ExtResource("2_0whxp")
-region = Rect2(0, 0, 48, 32)
+region = Rect2(96, 0, 48, 32)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_nsufb"]
+atlas = ExtResource("2_0whxp")
+region = Rect2(144, 0, 48, 32)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_4ffks"]
+atlas = ExtResource("2_0whxp")
+region = Rect2(192, 0, 48, 32)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_c43vg"]
+atlas = ExtResource("2_0whxp")
+region = Rect2(240, 0, 48, 32)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_3kqk8"]
+atlas = ExtResource("2_0whxp")
+region = Rect2(288, 0, 48, 32)
 
 [sub_resource type="AtlasTexture" id="AtlasTexture_fiu3s"]
 atlas = ExtResource("2_0whxp")
@@ -80,25 +81,25 @@ region = Rect2(0, 0, 48, 32)
 animations = [{
 "frames": [{
 "duration": 1.0,
-"texture": SubResource("AtlasTexture_3kqk8")
-}, {
-"duration": 1.0,
-"texture": SubResource("AtlasTexture_c43vg")
-}, {
-"duration": 1.0,
-"texture": SubResource("AtlasTexture_4ffks")
-}, {
-"duration": 1.0,
-"texture": SubResource("AtlasTexture_nsufb")
-}, {
-"duration": 1.0,
-"texture": SubResource("AtlasTexture_eh7br")
+"texture": SubResource("AtlasTexture_728py")
 }, {
 "duration": 1.0,
 "texture": SubResource("AtlasTexture_667xo")
 }, {
 "duration": 1.0,
-"texture": SubResource("AtlasTexture_728py")
+"texture": SubResource("AtlasTexture_eh7br")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_nsufb")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_4ffks")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_c43vg")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_3kqk8")
 }],
 "loop": false,
 "name": &"door",
@@ -162,8 +163,12 @@ size = Vector2(32, 14)
 [sub_resource type="CircleShape2D" id="CircleShape2D_e8qio"]
 radius = 19.0263
 
-[node name="Fabricator" type="StaticBody2D"]
+[node name="Fabricator" type="StaticBody2D" node_paths=PackedStringArray("interaction_prompt", "interaction_area", "fabricator_sprite")]
 script = ExtResource("1_0whxp")
+fabricator_ui_scene = ExtResource("2_728py")
+interaction_prompt = NodePath("InteractionPrompt")
+interaction_area = NodePath("InteractionArea")
+fabricator_sprite = NodePath("FabricatorSprite")
 
 [node name="FabricatorSprite" type="AnimatedSprite2D" parent="."]
 sprite_frames = SubResource("SpriteFrames_k6qpr")

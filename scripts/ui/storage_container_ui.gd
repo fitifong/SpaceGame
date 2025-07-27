@@ -1,7 +1,7 @@
 extends ItemContainerUI
 class_name StorageContainerUI
 
-@onready var player_inventory_ui: Control = get_node("/root/Game/GUIs/PlayerInventoryUI")  
+@export var player_inventory_ui: PlayerInventoryUI
 
 var storage_data = null  # Storage inventory reference
 

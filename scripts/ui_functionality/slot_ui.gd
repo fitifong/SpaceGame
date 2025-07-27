@@ -1,4 +1,5 @@
 extends Button
+class_name SlotUI
 
 @onready var item_icon = $SlotSprite/ItemIcon
 @onready var item_quantity = $SlotSprite/ItemQuantity
@@ -23,7 +24,20 @@ func update_ui() -> void:
 		item_quantity.text = ""
 		return
 
-	var item_data = ItemDatabase.get_item_data(slot_data["id"])
-	if item_data:
-		item_icon.texture = item_data.texture
-		item_quantity.text = str(slot_data["quantity"])
+	var item_res = slot_data["id"]   # now always an ItemResource
+	if item_res is ItemResource:
+		item_icon.texture = item_res.texture
+	else:
+		push_warning("SlotUI: unexpected id type %s" % typeof(item_res))
+		item_icon.texture = null
+
+	item_quantity.text = str(slot_data["quantity"])
+
+func get_slot_sprite() -> Sprite2D:
+	return get_node_or_null("SlotSprite")
+
+func get_icon() -> Sprite2D:
+	return item_icon
+
+func get_quantity() -> Label:
+	return item_quantity
