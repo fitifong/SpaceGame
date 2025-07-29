@@ -1,8 +1,8 @@
 extends ItemContainerUI
 
-@onready var smelt_button: Button = $NinePatchRect/SmeltButton
-@onready var input_slot: Button = $NinePatchRect/GridContainer/SlotUI1
-@onready var output_slot: Button = $NinePatchRect/GridContainer/OutputSlot
+@export var smelt_button: Button
+@export var input_slot: Button
+@export var output_slot: Button
 
 func _ready() -> void:
 	add_to_group("interactable_ui")

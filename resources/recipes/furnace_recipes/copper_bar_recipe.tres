@@ -1,6 +1,6 @@
 [gd_resource type="Resource" script_class="FurnaceRecipe" load_steps=4 format=3 uid="uid://dibwmxfxiqtr3"]
 
-[ext_resource type="Script" uid="uid://drh056sh0ufov" path="res://scripts/databases/furnace_recipe.gd" id="1_4s8r3"]
+[ext_resource type="Script" uid="uid://drh056sh0ufov" path="res://scripts/databases/furnace/furnace_recipe.gd" id="1_4s8r3"]
 [ext_resource type="Resource" uid="uid://i4uufv4ty8st" path="res://resources/items/copper_ore.tres" id="1_f6nmg"]
 [ext_resource type="Resource" uid="uid://bvrkfs870mqul" path="res://resources/items/copper_bar.tres" id="2_clxr6"]
 

@@ -1,6 +1,6 @@
 [gd_resource type="Resource" script_class="ItemResource" load_steps=3 format=3 uid="uid://7txp6ibf2wr0"]
 
-[ext_resource type="Script" uid="uid://by2c2bn6gvm1" path="res://scripts/databases/item_resource.gd" id="1_x3faq"]
+[ext_resource type="Script" uid="uid://by2c2bn6gvm1" path="res://scripts/databases/items/item_resource.gd" id="1_x3faq"]
 [ext_resource type="Texture2D" uid="uid://cyvm8gym7yca6" path="res://assets/items/iron_bar.aseprite" id="2_rnoxp"]
 
 [resource]

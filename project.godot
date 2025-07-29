@@ -25,8 +25,7 @@ PlayerInventory="*res://scripts/player/player_inventory.gd"
 DragManager="*res://scripts/ui_managers/drag_manager.gd"
 UIManager="*res://scripts/ui_managers/ui_manager.gd"
 ShiftClickManager="*res://scripts/ui_managers/shift_click_manager.gd"
-ItemDatabase="*res://scripts/databases/item_database.gd"
-FurnaceRecipeDatabase="res://scripts/databases/furnace_recipe_database.gd"
+ItemDatabase="*res://scripts/databases/items/item_database.gd"
 UiInteractionManager="*res://scripts/ui_managers/ui_interaction_manager.gd"
 
 [display]

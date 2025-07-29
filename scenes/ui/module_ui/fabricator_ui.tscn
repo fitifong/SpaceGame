@@ -23,7 +23,7 @@ script = ExtResource("1_34xt2")
 make_button = NodePath("NinePatchRect/MakeButton")
 recipe_selector = NodePath("NinePatchRect/RecipeSelector")
 input_slots = [NodePath("NinePatchRect/GridContainer/InputSlot1"), NodePath("NinePatchRect/GridContainer/InputSlot2"), NodePath("NinePatchRect/GridContainer/InputSlot3")]
-output_slot = NodePath("NinePatchRect/GridContainer/OutputSlot")
+output_slot = NodePath("NinePatchRect/GridContainer2/OutputSlot")
 slot_template = ExtResource("3_woqvf")
 output_slot_template = ExtResource("4_15f5j")
 ui_slot = ExtResource("4_woqvf")
@@ -37,10 +37,10 @@ anchor_left = 0.5
 anchor_top = 0.5
 anchor_right = 0.5
 anchor_bottom = 0.5
-offset_left = -87.1799
-offset_top = -168.0
-offset_right = 313.82
-offset_bottom = 108.0
+offset_left = -128.0
+offset_top = -196.0
+offset_right = 273.0
+offset_bottom = 80.0
 grow_horizontal = 2
 grow_vertical = 2
 texture = ExtResource("2_vcdtx")
@@ -69,13 +69,15 @@ offset_bottom = 154.0
 
 [node name="GridContainer" type="GridContainer" parent="NinePatchRect"]
 layout_mode = 1
-anchors_preset = 5
-anchor_left = 0.5
-anchor_right = 0.5
-offset_left = -136.0
-offset_top = 26.0
-offset_right = 136.0
-offset_bottom = 244.0
+anchors_preset = -1
+anchor_left = 0.12
+anchor_top = 0.069
+anchor_right = 0.798
+anchor_bottom = 0.301
+offset_left = 15.88
+offset_top = 4.956
+offset_right = 16.002
+offset_bottom = 4.92399
 grow_horizontal = 2
 theme_override_constants/h_separation = 40
 theme_override_constants/v_separation = 90
@@ -93,8 +95,30 @@ tooltip_text = "regular"
 layout_mode = 2
 tooltip_text = "regular"
 
-[node name="Control" type="Control" parent="NinePatchRect/GridContainer"]
+[node name="GridContainer2" type="GridContainer" parent="NinePatchRect"]
+layout_mode = 2
+offset_left = 272.0
+offset_top = 184.0
+offset_right = 336.0
+offset_bottom = 248.0
+
+[node name="OutputSlot" parent="NinePatchRect/GridContainer2" instance=ExtResource("4_15f5j")]
 layout_mode = 2
 
-[node name="OutputSlot" parent="NinePatchRect/GridContainer" instance=ExtResource("4_15f5j")]
+[node name="GridContainer3" type="GridContainer" parent="NinePatchRect"]
 layout_mode = 2
+offset_left = 64.0
+offset_top = 176.0
+offset_right = 225.0
+offset_bottom = 261.0
+
+[node name="PerItemTime" type="Label" parent="NinePatchRect/GridContainer3"]
+layout_mode = 2
+text = "IpsumLorum blablah"
+
+[node name="Quantity" type="SpinBox" parent="NinePatchRect/GridContainer3"]
+layout_mode = 2
+
+[node name="TotalTime" type="Label" parent="NinePatchRect/GridContainer3"]
+layout_mode = 2
+text = "Eat my ass bitch"

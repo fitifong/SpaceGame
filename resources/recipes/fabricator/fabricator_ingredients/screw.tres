@@ -1,0 +1,10 @@
+[gd_resource type="Resource" script_class="FabricatorIngredient" load_steps=3 format=3 uid="uid://08phafv0v4rf"]
+
+[ext_resource type="Resource" uid="uid://c8s2a60tidrnb" path="res://resources/items/screw.tres" id="1_0cj5y"]
+[ext_resource type="Script" uid="uid://cc5rspedtyod4" path="res://scripts/databases/fabricator/fabricator_ingredient.gd" id="2_jq01o"]
+
+[resource]
+script = ExtResource("2_jq01o")
+item = ExtResource("1_0cj5y")
+quantity = 4
+metadata/_custom_type_script = "uid://cc5rspedtyod4"

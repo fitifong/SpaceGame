@@ -6,6 +6,8 @@ class_name FabricatorUI
 @export var input_slots: Array[Button] = []
 @export var output_slot: Button
 
+var module_ref: FabricatorModule = null  # Set by the module when UI is opened
+
 func _ready():
 	add_to_group("interactable_ui")
 	slot_type_map = {3: "output"}
@@ -14,6 +16,10 @@ func _ready():
 
 	make_button.pressed.connect(_on_make_pressed)
 	recipe_selector.item_selected.connect(_on_recipe_selected)
+
+#func set_module_ref(module: FabricatorModule):
+	#module_ref = module
+	#update_recipe_list()
 
 func _on_make_pressed():
 	# Will trigger fabrication

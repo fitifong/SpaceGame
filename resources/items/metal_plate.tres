@@ -1,0 +1,13 @@
+[gd_resource type="Resource" script_class="ItemResource" load_steps=3 format=3 uid="uid://dxnpu0tyxi0kc"]
+
+[ext_resource type="Script" uid="uid://by2c2bn6gvm1" path="res://scripts/databases/items/item_resource.gd" id="1_a5qmx"]
+[ext_resource type="Texture2D" uid="uid://ct73gsoncppan" path="res://assets/items/metal_plate.aseprite" id="2_rqavl"]
+
+[resource]
+script = ExtResource("1_a5qmx")
+id = 3
+name = "Metal Plate"
+texture = ExtResource("2_rqavl")
+item_type = "component"
+quantity = 1
+metadata/_custom_type_script = "uid://by2c2bn6gvm1"

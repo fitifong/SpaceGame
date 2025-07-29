@@ -9,6 +9,7 @@ func _ready():
 	add_to_group("interactable_ui")
 	inventory_data_ref = PlayerInventory  # Always reference the player's inventory
 	super._ready()
+	open()
 
 # Returns the currently active UI (excluding Player Inventory) for swaps
 func get_active_container():

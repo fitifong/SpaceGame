@@ -1,6 +1,6 @@
 [gd_resource type="Resource" script_class="ItemResource" load_steps=3 format=3 uid="uid://cc6jtl7lijcxa"]
 
-[ext_resource type="Script" uid="uid://by2c2bn6gvm1" path="res://scripts/databases/item_resource.gd" id="1_ru7hm"]
+[ext_resource type="Script" uid="uid://by2c2bn6gvm1" path="res://scripts/databases/items/item_resource.gd" id="1_ru7hm"]
 [ext_resource type="Texture2D" uid="uid://cxanugslje4kc" path="res://assets/items/metal_sheet.aseprite" id="2_nd38r"]
 
 [resource]

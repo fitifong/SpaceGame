@@ -172,7 +172,7 @@ fabricator_sprite = NodePath("FabricatorSprite")
 
 [node name="FabricatorSprite" type="AnimatedSprite2D" parent="."]
 sprite_frames = SubResource("SpriteFrames_k6qpr")
-animation = &"door"
+animation = &"process"
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="."]
 position = Vector2(0, -3)

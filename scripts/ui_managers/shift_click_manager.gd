@@ -9,22 +9,19 @@ func shift_click(container: ItemContainerUI, slot_index: int) -> void:
 		return
 
 	var source_inv = container.inventory_data_ref
-	var item_data = source_inv.inventory[slot_index]
+	var item_data  = source_inv.inventory[slot_index]
 	if item_data == null:
-		return  # Nothing to transfer.
+		return
 
-	# Determine the target UI.
-	var target_ui = UIManager.get_active_ui() if UIManager else null
+	var target_ui: ItemContainerUI
 
-	# If the source is not the Player Inventory UI, transfer to Player Inventory UI.
-	if container.name != "PlayerInventoryUI":
-		var player_inv = get_node_or_null("/root/Game/GUIs/PlayerInventoryUI")
-		if player_inv:
-			target_ui = player_inv
-		else:
-			return  # Player Inventory UI not found.
-
-	# Ensure a valid target UI exists.
+	if container is PlayerInventoryUI:
+		# from player → send to whatever other UI is open
+		target_ui = UIManager.get_active_ui() as ItemContainerUI
+	else:
+		# from ANY other UI → send back to the player inventory
+		target_ui = UIManager.get_inventory_ui()
+	
 	if target_ui == null or target_ui == container:
 		return
 

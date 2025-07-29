@@ -47,11 +47,17 @@ func open():
 			return  
 
 		interaction_prompt.visible = false
+		
 		ui_instance = storage_ui_scene.instantiate()
-		ui_instance.player_inventory_ui = UIManager.get_inventory_ui()  # ✅ Inject dependency
+		
+		if ui_instance.has_method("set_inventory_ref"):
+			ui_instance.set_inventory_ref(self)
+		else:
+			ui_instance.inventory_data_ref = self
+
 		ui_instance.inventory_data_ref = self  # ✅ Let the UI show our inventory
 		UIManager.add_ui(ui_instance)
-		
+
 		UIManager.register_ui(ui_instance)  # Register the storage UI
 		
 		# Set the inventory reference

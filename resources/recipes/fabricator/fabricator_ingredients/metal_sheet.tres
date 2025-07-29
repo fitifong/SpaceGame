@@ -1,0 +1,10 @@
+[gd_resource type="Resource" script_class="FabricatorIngredient" load_steps=3 format=3 uid="uid://xeq4va3cgw1b"]
+
+[ext_resource type="Script" uid="uid://cc5rspedtyod4" path="res://scripts/databases/fabricator/fabricator_ingredient.gd" id="1_4nujt"]
+[ext_resource type="Resource" uid="uid://cc6jtl7lijcxa" path="res://resources/items/metal_sheet.tres" id="1_b0i8j"]
+
+[resource]
+script = ExtResource("1_4nujt")
+item = ExtResource("1_b0i8j")
+quantity = 1
+metadata/_custom_type_script = "uid://cc5rspedtyod4"

@@ -68,14 +68,11 @@ func _on_door_closed() -> void:
 	# Instantiate & wire the UI
 	ui_instance = fabricator_ui_scene.instantiate() as FabricatorUI
 	
-	# --- GUARDED PLAYER INVENTORY INJECTION ---
-	var inv_ui = UIManager.get_inventory_ui()
-	if inv_ui:
-		ui_instance.player_inventory_ui = inv_ui
+	if ui_instance.has_method("set_inventory_ref"):
+		ui_instance.set_inventory_ref(self)
 	else:
-		push_warning("[FabricatorModule] No PlayerInventoryUI found; UI will be non‑functional")
+		ui_instance.inventory_data_ref = self
 
-	ui_instance.inventory_data_ref = self
 	UIManager.add_ui(ui_instance)
 	UIManager.register_ui(ui_instance)
 	emit_signal("module_opened", ui_instance)

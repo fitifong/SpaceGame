@@ -21,11 +21,11 @@ func add_ui(ui: Control) -> void:
 
 # ----------------- 🔵 RETRIEVING ACTIVE UI ----------------- #
 func get_active_ui() -> Control:
-	# Return the first open UI that isn't the player inventory
+	# Return the first visible UI that is *not* the PlayerInventoryUI
 	for ui in active_ui_containers:
-		if ui.visible:
+		if ui.visible and not (ui is PlayerInventoryUI):
 			return ui
-	return null  # No valid UI found
+	return null
 
 func get_inventory_ui() -> PlayerInventoryUI:
 	for ui in active_ui_containers:
