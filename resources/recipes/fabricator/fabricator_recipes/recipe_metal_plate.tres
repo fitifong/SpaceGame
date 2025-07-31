@@ -1,0 +1,16 @@
+[gd_resource type="Resource" script_class="FabricatorRecipe" load_steps=6 format=3 uid="uid://cmysy56q6sv5h"]
+
+[ext_resource type="Script" uid="uid://by2c2bn6gvm1" path="res://scripts/databases/items/item_resource.gd" id="1_e4x7f"]
+[ext_resource type="Resource" uid="uid://cc6jtl7lijcxa" path="res://resources/items/metal_sheet.tres" id="2_1qc7x"]
+[ext_resource type="Script" uid="uid://70obt1nb3vj2" path="res://scripts/databases/fabricator/fabricator_recipe.gd" id="2_j8vhk"]
+[ext_resource type="Resource" uid="uid://dxnpu0tyxi0kc" path="res://resources/items/metal_plate.tres" id="2_wr6ja"]
+[ext_resource type="Resource" uid="uid://c8s2a60tidrnb" path="res://resources/items/screw.tres" id="3_4v1sn"]
+
+[resource]
+script = ExtResource("2_j8vhk")
+input_items = Array[ExtResource("1_e4x7f")]([ExtResource("2_1qc7x"), ExtResource("3_4v1sn")])
+input_quantities = Array[int]([1, 4])
+output_item = ExtResource("2_wr6ja")
+output_quantity = 1
+fab_time = 5
+metadata/_custom_type_script = "uid://70obt1nb3vj2"

@@ -8,7 +8,7 @@
 [ext_resource type="Texture2D" uid="uid://dw04xym0a8jwg" path="res://assets/UI Sprites/UI_slot_hover.aseprite" id="5_15f5j"]
 [ext_resource type="Texture2D" uid="uid://d1bmo5puicbva" path="res://assets/UI Sprites/UI_slot_drag.aseprite" id="6_akipx"]
 
-[node name="FabricatorUI" type="Control" node_paths=PackedStringArray("make_button", "recipe_selector", "input_slots", "output_slot")]
+[node name="FabricatorUI" type="Control" node_paths=PackedStringArray("input_slots", "output_slot", "make_button", "recipe_selector", "quantity_spinbox", "preview_time_label")]
 layout_mode = 3
 anchors_preset = 8
 anchor_left = 0.5
@@ -20,10 +20,12 @@ offset_right = 0.179962
 grow_horizontal = 2
 grow_vertical = 2
 script = ExtResource("1_34xt2")
-make_button = NodePath("NinePatchRect/MakeButton")
-recipe_selector = NodePath("NinePatchRect/RecipeSelector")
 input_slots = [NodePath("NinePatchRect/GridContainer/InputSlot1"), NodePath("NinePatchRect/GridContainer/InputSlot2"), NodePath("NinePatchRect/GridContainer/InputSlot3")]
 output_slot = NodePath("NinePatchRect/GridContainer2/OutputSlot")
+make_button = NodePath("NinePatchRect/MakeButton")
+recipe_selector = NodePath("NinePatchRect/RecipeSelector")
+quantity_spinbox = NodePath("NinePatchRect/GridContainer3/Quantity")
+preview_time_label = NodePath("NinePatchRect/GridContainer3/TotalTime")
 slot_template = ExtResource("3_woqvf")
 output_slot_template = ExtResource("4_15f5j")
 ui_slot = ExtResource("4_woqvf")
@@ -121,4 +123,4 @@ layout_mode = 2
 
 [node name="TotalTime" type="Label" parent="NinePatchRect/GridContainer3"]
 layout_mode = 2
-text = "Eat my ass bitch"
+text = "Total time"
