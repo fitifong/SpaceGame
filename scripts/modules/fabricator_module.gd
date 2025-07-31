@@ -76,17 +76,7 @@ func remove_item_from_slot(index: int) -> Dictionary:
 
 # -------------------- RECIPE ACCESS FOR UI --------------------
 func get_available_recipes(input_items: Array[Dictionary]) -> Array[FabricatorRecipe]:
-	print("=== CHECKING AVAILABLE RECIPES ===")
-	print("Current input items: ", input_items.size())
-	for item in input_items:
-		print("  - ", item["id"].name if item["id"] else "null", " x", item.get("quantity", 0))
-	
-	var matches = recipe_db.get_matching_recipes(input_items)
-	print("Matching recipes: ", matches.size())
-	for recipe in matches:
-		print("  - Can make: ", recipe.output_item.name)
-	
-	return matches
+	return recipe_db.get_matching_recipes(input_items)
 
 func get_max_craftable(recipe: FabricatorRecipe, input_items: Array[Dictionary]) -> int:
 	return recipe_db.get_max_craftable(recipe, input_items)

@@ -38,27 +38,57 @@ func set_module_ref(module: FabricatorModule) -> void:
 	module_ref = module
 	inventory_data_ref = module  # For ItemContainerUI compatibility
 	
-	# Connect to inventory changes to update recipes
-	if module.has_signal("slot_updated"):
-		module.slot_updated.connect(_on_input_changed)
+	# DON'T connect to slot_updated signal - we'll handle updates differently
+	print("✅ Module reference set")
 	
+	# Initial recipe check
 	_update_available_recipes()
 
-func _on_input_changed(slot_index: int):
-	# Only react to input slot changes (not output slot)
-	if slot_type_map.get(slot_index, "input") == "input":
+# ⭐ REMOVED: No more signal connection to avoid infinite loops
+# Instead, we'll override update_slot to directly update recipes
+
+# ⭐ SIMPLIFIED: Override update_slot without signal emissions
+func update_slot(index: int) -> void:
+	print("🔄 FabricatorUI: Slot ", index, " updated")
+	
+	# Call parent update first (handles visual updates)
+	super.update_slot(index)
+	
+	# ⭐ DIRECT UPDATE: Check recipes immediately without signals
+	if slot_type_map.get(index, "input") == "input":
+		print("📋 Input slot changed, updating recipes directly")
 		_update_available_recipes()
+	
+	# Handle output slot preview state
+	var output_slot_index = _get_output_slot_index()
+	if index == output_slot_index:
+		var actual_item = module_ref.inventory[index] if module_ref else null
+		
+		if actual_item != null:
+			# Real item exists, clear preview
+			is_showing_preview = false
+			_set_output_slot_preview_style(false)
+		elif current_recipe and not is_showing_preview:
+			# No real item but have recipe selected, show preview
+			_show_output_preview()
 
 # -------------------- RECIPE MANAGEMENT --------------------
 func _update_available_recipes():
 	if not module_ref:
 		return
 	
+	print("=== UPDATING AVAILABLE RECIPES ===")
+	
 	# Get current input items from module's actual inventory
 	var input_items = _get_current_input_items()
+	print("📦 Current input items: ", input_items.size())
+	for item in input_items:
+		if item.has("id") and item["id"]:
+			print("  - ", item["id"].name, " x", item["quantity"])
 	
-	# Ask module for matching recipes
+	# ⭐ DIRECT CALL: Ask module for matching recipes (no signals involved)
 	available_recipes = module_ref.get_available_recipes(input_items)
+	print("🔍 Found ", available_recipes.size(), " matching recipes")
 	
 	# Update recipe dropdown (with null check)
 	if recipe_selector:
@@ -68,6 +98,7 @@ func _update_available_recipes():
 		for i in range(available_recipes.size()):
 			var recipe = available_recipes[i]
 			recipe_selector.add_item(recipe.output_item.name)
+			print("➕ Added recipe: ", recipe.output_item.name)
 	
 	# Reset selection
 	current_recipe = null
@@ -273,25 +304,6 @@ func _on_slot_gui_input(event: InputEvent, slot: Button):
 	
 	# Otherwise, use normal slot interaction
 	super._on_slot_gui_input(event, slot)
-
-# -------------------- SLOT UPDATE OVERRIDE --------------------
-# Override to maintain preview state properly
-func update_slot(index: int) -> void:
-	# Call parent update first
-	super.update_slot(index)
-	
-	# If this is the output slot, check if we need to restore/clear preview
-	var output_slot_index = _get_output_slot_index()
-	if index == output_slot_index:
-		var actual_item = module_ref.inventory[index] if module_ref else null
-		
-		if actual_item != null:
-			# Real item exists, clear preview
-			is_showing_preview = false
-			_set_output_slot_preview_style(false)
-		elif current_recipe and not is_showing_preview:
-			# No real item but have recipe selected, show preview
-			_show_output_preview()
 
 # -------------------- FABRICATION TRIGGER --------------------
 func _on_make_pressed():

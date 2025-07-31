@@ -5,7 +5,6 @@ var recipes: Array[FabricatorRecipe] = []
 
 func load_all_recipes():
 	recipes.clear()
-	print("Loading fabricator recipes...")
 	
 	var dir = DirAccess.open("res://resources/recipes/fabricator/fabricator_recipes/")
 	if dir == null:
@@ -17,13 +16,10 @@ func load_all_recipes():
 	while file_name != "":
 		if file_name.ends_with(".tres"):
 			var path = "res://resources/recipes/fabricator/fabricator_recipes/" + file_name
-			print("Loading recipe: ", path)
 			var recipe = load(path)
 			if recipe is FabricatorRecipe:
 				recipes.append(recipe)
-				print("✅ Loaded: ", recipe.output_item.name)
-			else:
-				print("❌ Invalid recipe file: ", path)
+				print("✅ Loaded recipe: ", recipe.output_item.name)
 		file_name = dir.get_next()
 	dir.list_dir_end()
 	
@@ -39,15 +35,30 @@ func get_matching_recipes(input_items: Array[Dictionary]) -> Array[FabricatorRec
 	return matches
 
 func _recipe_matches_input(recipe: FabricatorRecipe, input_items: Array[Dictionary]) -> bool:
-	# Check if recipe has ingredients
-	if recipe.input_items.is_empty():
-		print("Recipe ", recipe.output_item.name, " has no inputs - cannot craft")
+	# Safety checks
+	if not recipe or not recipe.output_item or not recipe.input_items:
 		return false
 	
-	# Check each ingredient requirement
-	for i in range(recipe.get_ingredient_count()):
-		var required_item = recipe.get_ingredient_item(i)
-		var required_quantity = recipe.get_ingredient_quantity(i)
+	# Check if recipe has ingredients
+	if recipe.input_items.is_empty():
+		return false
+	
+	# Direct array access to avoid any potential recursion
+	var ingredient_count = recipe.input_items.size()
+	var quantity_count = recipe.input_quantities.size()
+	
+	# Make sure arrays match
+	if ingredient_count != quantity_count:
+		return false
+	
+	# Check each ingredient requirement using direct array access
+	for i in range(ingredient_count):
+		var required_item = recipe.input_items[i]
+		var required_quantity = recipe.input_quantities[i]
+		
+		if not required_item or required_quantity <= 0:
+			continue
+		
 		var matched := false
 		
 		# Look for this ingredient in current inputs
@@ -58,21 +69,31 @@ func _recipe_matches_input(recipe: FabricatorRecipe, input_items: Array[Dictiona
 					break
 		
 		if not matched:
-			print("Missing ingredient: ", required_item.name, " x", required_quantity)
 			return false
 	
 	return true
 
 func get_max_craftable(recipe: FabricatorRecipe, input_items: Array[Dictionary]) -> int:
-	if recipe.input_items.is_empty():
+	# Safety checks
+	if not recipe or not recipe.input_items or recipe.input_items.is_empty():
 		return 0
 	
 	var max_craftable = 999
+	var ingredient_count = recipe.input_items.size()
+	var quantity_count = recipe.input_quantities.size()
+	
+	# Make sure arrays match
+	if ingredient_count != quantity_count:
+		return 0
 	
 	# Check each ingredient to find the limiting factor
-	for i in range(recipe.get_ingredient_count()):
-		var required_item = recipe.get_ingredient_item(i)
-		var required_quantity = recipe.get_ingredient_quantity(i)
+	for i in range(ingredient_count):
+		var required_item = recipe.input_items[i]
+		var required_quantity = recipe.input_quantities[i]
+		
+		if not required_item or required_quantity <= 0:
+			continue
+		
 		var available_quantity = 0
 		
 		# Find how much of this ingredient we have
