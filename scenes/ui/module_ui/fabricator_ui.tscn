@@ -114,10 +114,6 @@ offset_top = 176.0
 offset_right = 225.0
 offset_bottom = 261.0
 
-[node name="PerItemTime" type="Label" parent="NinePatchRect/GridContainer3"]
-layout_mode = 2
-text = "IpsumLorum blablah"
-
 [node name="Quantity" type="SpinBox" parent="NinePatchRect/GridContainer3"]
 layout_mode = 2
 

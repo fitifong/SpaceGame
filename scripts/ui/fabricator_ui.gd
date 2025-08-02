@@ -11,6 +11,9 @@ class_name FabricatorUI
 @export var quantity_spinbox: SpinBox
 @export var preview_time_label: Label
 
+# -------------------- PROGRESS DISPLAY --------------------
+@export var progress_bar: ProgressBar
+
 var module_ref: FabricatorModule = null
 var current_recipe: FabricatorRecipe = null
 var available_recipes: Array[FabricatorRecipe] = []
@@ -38,14 +41,37 @@ func set_module_ref(module: FabricatorModule) -> void:
 	module_ref = module
 	inventory_data_ref = module  # For ItemContainerUI compatibility
 	
-	# DON'T connect to slot_updated signal - we'll handle updates differently
+	# Connect to fabrication progress updates
+	if module_ref.has_signal("fabrication_progress_updated"):
+		if not module_ref.fabrication_progress_updated.is_connected(_on_fabrication_progress_updated):
+			module_ref.fabrication_progress_updated.connect(_on_fabrication_progress_updated)
+	
 	print("✅ Module reference set")
+	
+	# Check if we just completed a fabrication and should restore the recipe
+	_check_for_completed_fabrication()
 	
 	# Initial recipe check
 	_update_available_recipes()
 
-# ⭐ REMOVED: No more signal connection to avoid infinite loops
-# Instead, we'll override update_slot to directly update recipes
+func _check_for_completed_fabrication():
+	# If the fabricator sprite is on frame 9 (completed), try to restore the last recipe
+	if module_ref and module_ref.fabricator_sprite.animation == "process" and module_ref.fabricator_sprite.frame == 9:
+		# Store the last completed recipe info for restoration
+		var last_recipe = module_ref.get_last_completed_recipe()
+		if last_recipe:
+			# We'll restore this after updating available recipes
+			call_deferred("_restore_last_recipe", last_recipe)
+
+func _on_fabrication_progress_updated(progress: float):
+	if progress_bar:
+		progress_bar.value = progress
+		progress_bar.visible = progress > 0.0
+	
+	# Update time remaining display
+	if preview_time_label and module_ref and module_ref.is_processing:
+		var remaining_time = module_ref.total_fabrication_time - module_ref.fabrication_timer
+		preview_time_label.text = "Time remaining: %.1f seconds" % remaining_time
 
 # ⭐ SIMPLIFIED: Override update_slot without signal emissions
 func update_slot(index: int) -> void:
@@ -147,6 +173,10 @@ func _clear_preview():
 	if preview_time_label:
 		preview_time_label.text = ""
 	
+	# Clear progress bar
+	if progress_bar:
+		progress_bar.visible = false
+	
 	# Clear output slot preview
 	_clear_output_preview()
 
@@ -237,7 +267,7 @@ func _get_output_slot_index() -> int:
 	for index in slot_type_map.keys():
 		if slot_type_map[index] == "output":
 			return index
-	return -1
+	return 3  # Default fallback
 
 func _get_output_slot_capacity(output_index: int) -> int:
 	if output_index < 0 or not module_ref:
@@ -317,3 +347,22 @@ func _on_make_pressed():
 	
 	# Start fabrication via module
 	module_ref.start_fabrication(current_recipe, selected_quantity)
+
+# -------------------- RECIPE RESTORATION --------------------
+func _restore_last_recipe(last_recipe: FabricatorRecipe):
+	if not last_recipe or not recipe_selector:
+		return
+	
+	# Find the recipe in our available recipes
+	for i in range(available_recipes.size()):
+		if available_recipes[i] == last_recipe:
+			# Select this recipe in the dropdown (+1 because first item is "Select Recipe...")
+			recipe_selector.selected = i + 1
+			current_recipe = last_recipe
+			_update_recipe_preview()
+			_update_quantity_limits()
+			_update_make_button_state()
+			print("🔄 Restored last recipe: ", last_recipe.output_item.name)
+			return
+	
+	print("⚠️ Could not restore last recipe - not enough materials")
