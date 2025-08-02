@@ -27,6 +27,7 @@ UIManager="*res://scripts/ui_managers/ui_manager.gd"
 ShiftClickManager="*res://scripts/ui_managers/shift_click_manager.gd"
 ItemDatabase="*res://scripts/databases/items/item_database.gd"
 UiInteractionManager="*res://scripts/ui_managers/ui_interaction_manager.gd"
+GameConstants="*res://scripts/game_constants.gd"
 
 [display]
 

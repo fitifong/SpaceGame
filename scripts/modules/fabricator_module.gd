@@ -26,26 +26,45 @@ var fabrication_timer: float = 0.0
 var total_fabrication_time: float = 0.0
 var last_completed_recipe: FabricatorRecipe = null  # Store for UI restoration
 
+# Module state tracking
+var module_state: GameConstants.ModuleState = GameConstants.ModuleState.IDLE
+
 func _ready():
 	add_to_group("interactable_modules")
-	interaction_prompt.visible = false
-	interaction_prompt.z_index = 999
-	fabricator_sprite.play("static_open")
-	set_inventory_size(4)
+	
+	# FIXED: Null safety checks
+	if interaction_prompt:
+		interaction_prompt.visible = false
+		interaction_prompt.z_index = 999
+	else:
+		push_warning("[FabricatorModule] interaction_prompt not assigned")
+		
+	if fabricator_sprite:
+		fabricator_sprite.play("static_open")
+	else:
+		push_error("[FabricatorModule] fabricator_sprite not assigned")
+		
+	set_inventory_size(GameConstants.FABRICATOR_SLOTS)
 	
 	# Load recipes (like FurnaceModule does)
-	recipe_db.load_all_recipes()
+	if recipe_db:
+		recipe_db.load_all_recipes()
+	else:
+		push_error("[FabricatorModule] Failed to create recipe database")
+		return
 	
 	# Debug: Print loaded recipes
 	print("=== FABRICATOR DEBUG ===")
 	print("Loaded recipes: ", recipe_db.recipes.size())
 	for recipe in recipe_db.recipes:
-		print("Recipe: ", recipe.output_item.name)
-		print("  - Inputs required: ", recipe.input_items.size())
-		for i in range(recipe.get_ingredient_count()):
-			var item = recipe.get_ingredient_item(i)
-			var qty = recipe.get_ingredient_quantity(i)
-			print("    * ", item.name, " x", qty)
+		if recipe and recipe.output_item:
+			print("Recipe: ", recipe.output_item.name)
+			print("  - Inputs required: ", recipe.input_items.size())
+			for i in range(recipe.get_ingredient_count()):
+				var item = recipe.get_ingredient_item(i)
+				var qty = recipe.get_ingredient_quantity(i)
+				if item:
+					print("    * ", item.name, " x", qty)
 
 func _process(delta: float):
 	if is_processing and current_recipe:
@@ -66,25 +85,40 @@ func _process(delta: float):
 			_complete_fabrication()
 
 func set_inventory_size(size: int) -> void:
+	# FIXED: Input validation
+	if size < 0:
+		push_error("[FabricatorModule] Invalid inventory size: %d" % size)
+		return
+		
 	inventory_size = size
 	inventory.resize(size)
 
 # -------------------- INVENTORY MANAGEMENT WITH SIGNALS --------------------
 # This function should be called whenever the inventory changes
 func update_inventory_slot(index: int, new_item: Dictionary = {}):
-	if index >= 0 and index < inventory.size():
-		if new_item.is_empty():
-			inventory[index] = null
-		else:
-			inventory[index] = new_item
+	# FIXED: Input validation
+	if index < 0 or index >= inventory.size():
+		push_error("[FabricatorModule] Invalid slot index: %d (inventory size: %d)" % [index, inventory.size()])
+		return
 		
-		# Emit signal so UI can update
-		slot_updated.emit(index)
-		print("Slot ", index, " updated: ", inventory[index])
+	if new_item.is_empty():
+		inventory[index] = null
+	else:
+		inventory[index] = new_item
+	
+	# Emit signal so UI can update
+	slot_updated.emit(index)
+	print("Slot ", index, " updated: ", inventory[index])
 
 # Helper function to add/remove items (with signal emission)
 func add_item_to_slot(index: int, item: Dictionary) -> bool:
+	# FIXED: Input validation
 	if index < 0 or index >= inventory.size():
+		push_error("[FabricatorModule] Cannot add item to invalid slot: %d" % index)
+		return false
+	
+	if not item:
+		push_warning("[FabricatorModule] Cannot add null item to slot")
 		return false
 	
 	inventory[index] = item
@@ -92,7 +126,9 @@ func add_item_to_slot(index: int, item: Dictionary) -> bool:
 	return true
 
 func remove_item_from_slot(index: int) -> Dictionary:
+	# FIXED: Input validation
 	if index < 0 or index >= inventory.size():
+		push_error("[FabricatorModule] Cannot remove item from invalid slot: %d" % index)
 		return {}
 	
 	var removed_item = inventory[index] if inventory[index] else {}
@@ -102,12 +138,32 @@ func remove_item_from_slot(index: int) -> Dictionary:
 
 # -------------------- RECIPE ACCESS FOR UI --------------------
 func get_available_recipes(input_items: Array[Dictionary]) -> Array[FabricatorRecipe]:
+	if not recipe_db:
+		push_error("[FabricatorModule] No recipe database available")
+		return []
+		
 	return recipe_db.get_matching_recipes(input_items)
 
 func get_max_craftable(recipe: FabricatorRecipe, input_items: Array[Dictionary]) -> int:
+	if not recipe_db:
+		push_error("[FabricatorModule] No recipe database available")
+		return 0
+		
+	if not recipe:
+		push_warning("[FabricatorModule] Cannot get max craftable for null recipe")
+		return 0
+		
 	return recipe_db.get_max_craftable(recipe, input_items)
 
 func validate_recipe(recipe: FabricatorRecipe, quantity: int) -> bool:
+	if not recipe:
+		push_warning("[FabricatorModule] Cannot validate null recipe")
+		return false
+		
+	if quantity <= 0:
+		push_warning("[FabricatorModule] Cannot validate recipe with invalid quantity: %d" % quantity)
+		return false
+		
 	var input_items = _get_current_input_items()
 	var max_possible = recipe_db.get_max_craftable(recipe, input_items)
 	return max_possible >= quantity
@@ -115,18 +171,22 @@ func validate_recipe(recipe: FabricatorRecipe, quantity: int) -> bool:
 # -------------------- INTERACTION --------------------
 func _on_interaction_area_body_entered(body: Node2D) -> void:
 	if body is Player:
-		body.modules_in_range.append(self)
+		if "modules_in_range" in body:
+			body.modules_in_range.append(self)
+		else:
+			push_warning("[FabricatorModule] Player missing modules_in_range array")
 
 func _on_interaction_area_body_exited(body: Node2D) -> void:
 	if body is Player:
-		body.modules_in_range.erase(self)
+		if "modules_in_range" in body:
+			body.modules_in_range.erase(self)
 		if ui_instance:
 			close()
 
 func interact():
 	if is_processing:
 		# If fabrication is complete (frame 9), allow opening with door animation
-		if fabricator_sprite.frame == 9:
+		if fabricator_sprite and fabricator_sprite.frame == GameConstants.FABRICATION_COMPLETE_FRAME:
 			# Fabrication is done, player can open to collect (with door animation)
 			open_with_door_animation()
 			return
@@ -146,46 +206,74 @@ func interact():
 # -------------------- UI MANAGEMENT --------------------
 func open():
 	# Normal open without door animation (instant)
-	if ui_instance or anim_busy or fabricator_ui_scene == null:
+	if ui_instance or anim_busy:
+		return
+		
+	if not fabricator_ui_scene:
+		push_error("[FabricatorModule] fabricator_ui_scene not assigned")
 		return
 
-	interaction_prompt.visible = false
+	if interaction_prompt:
+		interaction_prompt.visible = false
 	
 	# Instantiate & wire the UI immediately
 	ui_instance = fabricator_ui_scene.instantiate() as FabricatorUI
+	if not ui_instance:
+		push_error("[FabricatorModule] Failed to instantiate fabricator UI")
+		return
+		
 	ui_instance.set_module_ref(self)  # Pass module reference to UI
 
-	UIManager.add_ui(ui_instance)
-	UIManager.register_ui(ui_instance)
+	if UIManager:
+		UIManager.add_ui(ui_instance)
+		UIManager.register_ui(ui_instance)
+	else:
+		push_error("[FabricatorModule] UIManager not available")
+		
 	emit_signal("module_opened", ui_instance)
 
 func open_with_door_animation():
 	# Special open for when fabrication is complete (with door animation)
-	if ui_instance or anim_busy or fabricator_ui_scene == null:
+	if ui_instance or anim_busy:
+		return
+		
+	if not fabricator_ui_scene:
+		push_error("[FabricatorModule] fabricator_ui_scene not assigned")
 		return
 
-	interaction_prompt.visible = false
+	if interaction_prompt:
+		interaction_prompt.visible = false
+		
 	anim_busy = true
 
 	var cb = Callable(self, "_on_door_opened_for_ui_after_fabrication")
-	if not fabricator_sprite.is_connected("animation_finished", cb):
+	if fabricator_sprite and not fabricator_sprite.is_connected("animation_finished", cb):
 		fabricator_sprite.connect("animation_finished", cb)
 
 	# Play door opening animation (reverse)
-	fabricator_sprite.play("door", -1.0, true)
+	if fabricator_sprite:
+		fabricator_sprite.play("door", -1.0, true)
 
 func _on_door_opened_for_ui_after_fabrication() -> void:
-	fabricator_sprite.disconnect("animation_finished", Callable(self, "_on_door_opened_for_ui_after_fabrication"))
-	
-	# Now that door is open, show static_open
-	fabricator_sprite.play("static_open")
+	if fabricator_sprite:
+		fabricator_sprite.disconnect("animation_finished", Callable(self, "_on_door_opened_for_ui_after_fabrication"))
+		
+		# Now that door is open, show static_open
+		fabricator_sprite.play("static_open")
 	
 	# Instantiate & wire the UI
 	ui_instance = fabricator_ui_scene.instantiate() as FabricatorUI
+	if not ui_instance:
+		push_error("[FabricatorModule] Failed to instantiate fabricator UI after animation")
+		anim_busy = false
+		return
+		
 	ui_instance.set_module_ref(self)  # Pass module reference to UI
 
-	UIManager.add_ui(ui_instance)
-	UIManager.register_ui(ui_instance)
+	if UIManager:
+		UIManager.add_ui(ui_instance)
+		UIManager.register_ui(ui_instance)
+		
 	emit_signal("module_opened", ui_instance)
 	
 	# Clear the last completed recipe since we've now opened the UI
@@ -195,20 +283,33 @@ func _on_door_opened_for_ui_after_fabrication() -> void:
 
 func close():
 	# Normal close without door animation (instant)
-	if ui_instance == null:
+	if not ui_instance:
 		return
 
 	# Tear down UI immediately
-	UIManager.unregister_ui(ui_instance)
+	if UIManager:
+		UIManager.unregister_ui(ui_instance)
+		
 	ui_instance.queue_free()
 	ui_instance = null
 	emit_signal("closed")
 
-	interaction_prompt.visible = true
+	if interaction_prompt:
+		interaction_prompt.visible = true
 
 # -------------------- FABRICATION PROCESS --------------------
 func start_fabrication(recipe: FabricatorRecipe, quantity: int):
-	if is_processing or anim_busy or not recipe:
+	# FIXED: Input validation
+	if not recipe:
+		push_error("[FabricatorModule] Cannot start fabrication with null recipe")
+		return
+		
+	if quantity <= 0:
+		push_error("[FabricatorModule] Cannot start fabrication with invalid quantity: %d" % quantity)
+		return
+		
+	if is_processing or anim_busy:
+		push_warning("[FabricatorModule] Cannot start fabrication: module busy")
 		return
 	
 	# Validate recipe with current inputs
@@ -225,6 +326,7 @@ func start_fabrication(recipe: FabricatorRecipe, quantity: int):
 	current_recipe = recipe
 	current_quantity = quantity
 	is_processing = true
+	module_state = GameConstants.ModuleState.PROCESSING
 	fabrication_timer = 0.0
 	total_fabrication_time = recipe.fab_time * quantity
 	
@@ -235,30 +337,39 @@ func start_fabrication(recipe: FabricatorRecipe, quantity: int):
 	# Play door closing animation, then start processing
 	anim_busy = true
 	var cb = Callable(self, "_on_door_closed_for_fabrication")
-	if not fabricator_sprite.is_connected("animation_finished", cb):
+	if fabricator_sprite and not fabricator_sprite.is_connected("animation_finished", cb):
 		fabricator_sprite.connect("animation_finished", cb)
 
-	fabricator_sprite.play("door")
+	if fabricator_sprite:
+		fabricator_sprite.play("door")
 
 func _on_door_closed_for_fabrication() -> void:
-	fabricator_sprite.disconnect("animation_finished", Callable(self, "_on_door_closed_for_fabrication"))
-	
-	# Now start the process animation
-	fabricator_sprite.play("process")
-	fabricator_sprite.pause()  # Pause so we can control frames manually
-	fabricator_sprite.frame = 0  # Start at frame 0
+	if fabricator_sprite:
+		fabricator_sprite.disconnect("animation_finished", Callable(self, "_on_door_closed_for_fabrication"))
+		
+		# Now start the process animation
+		fabricator_sprite.play("process")
+		fabricator_sprite.pause()  # Pause so we can control frames manually
+		fabricator_sprite.frame = 0  # Start at frame 0
 	
 	anim_busy = false
 
 func _consume_recipe_materials(recipe: FabricatorRecipe, quantity: int):
+	if not recipe:
+		push_error("[FabricatorModule] Cannot consume materials for null recipe")
+		return
+		
 	# Remove materials from input slots
 	for i in range(recipe.get_ingredient_count()):
 		var required_item = recipe.get_ingredient_item(i)
 		var required_quantity = recipe.get_ingredient_quantity(i) * quantity
 		
+		if not required_item:
+			continue
+		
 		# Find and consume from inventory
 		for slot_index in range(inventory.size()):
-			if slot_index != 3:  # Skip output slot (assuming slot 3 is output)
+			if slot_index != GameConstants.OUTPUT_SLOT_INDEX:  # Skip output slot
 				var slot_item = inventory[slot_index]
 				if slot_item and slot_item["id"] == required_item:
 					slot_item["quantity"] -= required_quantity
@@ -269,15 +380,19 @@ func _consume_recipe_materials(recipe: FabricatorRecipe, quantity: int):
 					break
 		
 		if required_quantity > 0:
-			push_error("Failed to consume required materials for fabrication!")
+			push_error("[FabricatorModule] Failed to consume required materials for fabrication!")
 
 func _complete_fabrication():
+	if not current_recipe:
+		push_error("[FabricatorModule] Cannot complete fabrication: no current recipe")
+		return
+		
 	# Produce the output item
 	var output_slot_index = _get_output_slot_index()
 	var output_item = inventory[output_slot_index]
 	var total_output = current_recipe.output_quantity * current_quantity
 	
-	if output_item == null:
+	if not output_item:
 		inventory[output_slot_index] = {
 			"id": current_recipe.output_item,
 			"quantity": total_output
@@ -289,13 +404,15 @@ func _complete_fabrication():
 	slot_updated.emit(output_slot_index)
 	
 	# Keep the animation at frame 9 (complete state)
-	fabricator_sprite.frame = 9
+	if fabricator_sprite:
+		fabricator_sprite.frame = GameConstants.FABRICATION_COMPLETE_FRAME
 	
 	# Store the completed recipe for potential UI restoration
 	last_completed_recipe = current_recipe
 	
 	# Reset fabrication state
 	is_processing = false
+	module_state = GameConstants.ModuleState.COMPLETE
 	current_recipe = null
 	current_quantity = 0
 	fabrication_timer = 0.0
@@ -310,13 +427,13 @@ func _update_process_animation_frame(progress: float):
 	# Map progress (0.0-1.0) to frame (0-9)
 	# Clamp to ensure we don't exceed frame 9
 	var frame_index = int(progress * 9.0)
-	frame_index = clamp(frame_index, 0, 9)
+	frame_index = clamp(frame_index, 0, GameConstants.FABRICATION_COMPLETE_FRAME)
 	
 	fabricator_sprite.frame = frame_index
 
 func _get_output_slot_index() -> int:
-	# Find output slot based on slot_type_map or default to slot 3
-	return 3  # Based on your current setup
+	# Find output slot based on slot_type_map or default to constant
+	return GameConstants.OUTPUT_SLOT_INDEX
 
 # -------------------- HELPER FUNCTIONS --------------------
 func get_last_completed_recipe() -> FabricatorRecipe:
@@ -328,9 +445,9 @@ func clear_last_completed_recipe():
 func _get_current_input_items() -> Array[Dictionary]:
 	var inputs: Array[Dictionary] = []
 	
-	# Collect all input items (assuming slot 3 is output)
+	# Collect all input items (assuming OUTPUT_SLOT_INDEX is output)
 	for i in range(inventory.size()):
-		if i != 3:  # Skip output slot
+		if i != GameConstants.OUTPUT_SLOT_INDEX:  # Skip output slot
 			var item = inventory[i]
 			if item != null:
 				inputs.append(item)

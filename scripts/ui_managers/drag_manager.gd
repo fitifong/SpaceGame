@@ -27,21 +27,48 @@ var dragged_item_scene: PackedScene = preload("res://scenes/ui/dragged_item.tscn
 #   - slot_button: The Button for that slot.
 #   - event: The InputEventMouseButton that initiated the drag.
 func start_drag(container: ItemContainerUI, slot_button: Button, event: InputEventMouseButton) -> void:
+	# FIXED: Input validation
+	if not container:
+		push_error("[DragManager] Cannot start drag: container is null")
+		return
+		
+	if not slot_button:
+		push_error("[DragManager] Cannot start drag: slot_button is null")
+		return
+		
+	if not event:
+		push_error("[DragManager] Cannot start drag: event is null")
+		return
+		
 	if dragging:
 		return  # Already dragging something
 
 	# Get the slot index in the container.
 	var index = container.get_slot_index(slot_button)
 	if index < 0:
+		push_warning("[DragManager] Invalid slot index for drag start")
+		return
+
+	if not container.inventory_data_ref:
+		push_error("[DragManager] Container has no inventory_data_ref")
 		return
 
 	var inv_manager = container.inventory_data_ref
+	if index >= inv_manager.inventory.size():
+		push_error("[DragManager] Slot index %d exceeds inventory size %d" % [index, inv_manager.inventory.size()])
+		return
+		
 	var source_item = inv_manager.inventory[index]
-	if source_item == null:
+	if not source_item:
 		return  # Nothing to drag
 
+	# FIXED: Ensure item ID is ItemResource
 	if source_item["id"] is int:
-		source_item["id"] = ItemDatabase.get_item_data(source_item["id"])
+		var item_resource = ItemDatabase.get_item_data(source_item["id"])
+		if not item_resource:
+			push_error("[DragManager] Could not find ItemResource for ID: %d" % source_item["id"])
+			return
+		source_item["id"] = item_resource
 
 	# Decide if it's a full drag or a right-click split.
 	if event.button_index == MOUSE_BUTTON_LEFT:
@@ -51,10 +78,10 @@ func start_drag(container: ItemContainerUI, slot_button: Button, event: InputEve
 		inv_manager.inventory[index] = null
 	elif event.button_index == MOUSE_BUTTON_RIGHT:
 		# Right-click split: drag half the stack.
-		var half_stack = ceil(source_item["quantity"] / 2)
+		var half_stack = ceili(source_item["quantity"] / 2.0)
 		drag_data["id"] = source_item["id"]
 		drag_data["quantity"] = half_stack
-		# 🔄 RESTORED – remove the half from the source stack
+		# Remove the half from the source stack
 		source_item["quantity"] -= half_stack
 		if source_item["quantity"] <= 0:
 			inv_manager.inventory[index] = null
@@ -66,11 +93,27 @@ func start_drag(container: ItemContainerUI, slot_button: Button, event: InputEve
 	original_source_index     = index
 
 	# Create the floating dragged icon.
+	if not dragged_item_scene:
+		push_error("[DragManager] dragged_item_scene is null - cannot create drag visual")
+		_cleanup_drag_state()
+		return
+		
 	dragged_visual = dragged_item_scene.instantiate()
+	if not dragged_visual:
+		push_error("[DragManager] Failed to instantiate dragged_item_scene")
+		_cleanup_drag_state()
+		return
+		
 	dragged_visual.mouse_filter = Control.MOUSE_FILTER_IGNORE  # Let clicks pass through
-	UIManager.add_ui(dragged_visual)
+	
+	if UIManager:
+		UIManager.add_ui(dragged_visual)
+	else:
+		push_error("[DragManager] UIManager not available")
+		_cleanup_drag_state()
+		return
 
-	# NEW: centralised refresh
+	# Update drag visual
 	update_drag_visual()
 
 	dragging = true
@@ -78,24 +121,44 @@ func start_drag(container: ItemContainerUI, slot_button: Button, event: InputEve
 	# Refresh UI so the source slot now shows the updated (reduced or empty) stack.
 	container.update_slot(index)
 
+# FIXED: Helper function to clean up drag state on errors
+func _cleanup_drag_state():
+	dragging = false
+	drag_data = {"id": null, "quantity": 0}
+	original_source_container = null
+	original_source_index = -1
+	if dragged_visual:
+		dragged_visual.queue_free()
+		dragged_visual = null
+
 # If the player cancels the drag (clicks the background or presses ESC), revert any remaining items back to the source slot.
 func cancel_drag():
 	if not dragging:
 		return
 
 	if drag_data["quantity"] > 0 and original_source_container:
+		if not original_source_container.inventory_data_ref:
+			push_error("[DragManager] Cannot cancel drag: original container has no inventory_data_ref")
+			end_drag()
+			return
+			
 		var index = original_source_index
+		if index < 0 or index >= original_source_container.inventory_data_ref.inventory.size():
+			push_error("[DragManager] Cannot cancel drag: invalid original index %d" % index)
+			end_drag()
+			return
+			
 		var inv_manager = original_source_container.inventory_data_ref
 		var slot_item  = inv_manager.inventory[index]
 
-		if slot_item == null:
+		if not slot_item:
 			# If the source is still empty, restore the dragged items.
 			inv_manager.inventory[index] = {
 				"id": drag_data["id"],
 				"quantity": drag_data["quantity"]
 			}
 		else:
-			# If there's already something there, check if it’s the same item.
+			# If there's already something there, check if it's the same item.
 			if slot_item["id"] == drag_data["id"]:
 				slot_item["quantity"] += drag_data["quantity"]
 			# else: different item – leave drag_data unchanged (swap handled elsewhere)
@@ -109,22 +172,46 @@ func cancel_drag():
 # ------------------------------------------------------------------
 
 func partial_drop(container: ItemContainerUI, slot_button: Button) -> void:
+	# FIXED: Input validation
+	if not container:
+		push_error("[DragManager] Cannot partial drop: container is null")
+		return
+		
+	if not slot_button:
+		push_error("[DragManager] Cannot partial drop: slot_button is null")
+		return
+		
 	if not dragging:
 		return
+		
 	if drag_data["quantity"] <= 0:
-		end_drag(); return
+		end_drag()
+		return
 
 	var index = container.get_slot_index(slot_button)
-	if index < 0 or slot_button.slot_type == "output":
+	if index < 0:
+		push_warning("[DragManager] Invalid slot for partial drop")
+		return
+		
+	# FIXED: Check slot type using property access
+	if "slot_type" in slot_button and slot_button.slot_type == GameConstants.SLOT_TYPE_OUTPUT:
+		return
+
+	if not container.inventory_data_ref:
+		push_error("[DragManager] Cannot partial drop: container has no inventory_data_ref")
 		return
 
 	var inv_manager = container.inventory_data_ref
+	if index >= inv_manager.inventory.size():
+		push_error("[DragManager] Partial drop index %d exceeds inventory size %d" % [index, inv_manager.inventory.size()])
+		return
+		
 	var dest_item = inv_manager.inventory[index]
 
 	# We always deposit 1 item on partial_drop.
 	var deposit_amount = 1
 
-	if dest_item == null:
+	if not dest_item:
 		inv_manager.inventory[index] = {
 			"id": drag_data["id"],
 			"quantity": deposit_amount
@@ -134,7 +221,7 @@ func partial_drop(container: ItemContainerUI, slot_button: Button) -> void:
 		if dest_item["id"] != drag_data["id"]:
 			return  # Partial drop only for identical items
 
-		var capacity_left = 99 - dest_item["quantity"]
+		var capacity_left = GameConstants.MAX_STACK_SIZE - dest_item["quantity"]
 		if capacity_left <= 0:
 			return
 
@@ -149,20 +236,44 @@ func partial_drop(container: ItemContainerUI, slot_button: Button) -> void:
 		end_drag()
 
 func full_drop(container: ItemContainerUI, slot_button: Button) -> void:
+	# FIXED: Input validation
+	if not container:
+		push_error("[DragManager] Cannot full drop: container is null")
+		return
+		
+	if not slot_button:
+		push_error("[DragManager] Cannot full drop: slot_button is null")
+		return
+		
 	if not dragging:
 		return
+		
 	if drag_data["quantity"] <= 0:
-		end_drag(); return
+		end_drag()
+		return
 
 	var index = container.get_slot_index(slot_button)
-	if index < 0 or slot_button.slot_type == "output":
+	if index < 0:
+		push_warning("[DragManager] Invalid slot for full drop")
+		return
+		
+	# FIXED: Check slot type using property access
+	if "slot_type" in slot_button and slot_button.slot_type == GameConstants.SLOT_TYPE_OUTPUT:
+		return
+
+	if not container.inventory_data_ref:
+		push_error("[DragManager] Cannot full drop: container has no inventory_data_ref")
 		return
 
 	var inv_manager = container.inventory_data_ref
+	if index >= inv_manager.inventory.size():
+		push_error("[DragManager] Full drop index %d exceeds inventory size %d" % [index, inv_manager.inventory.size()])
+		return
+		
 	var dest_item = inv_manager.inventory[index]
 
-	if dest_item == null:
-		var deposit = min(drag_data["quantity"], 99)
+	if not dest_item:
+		var deposit = min(drag_data["quantity"], GameConstants.MAX_STACK_SIZE)
 		inv_manager.inventory[index] = {
 			"id": drag_data["id"],
 			"quantity": deposit
@@ -171,7 +282,7 @@ func full_drop(container: ItemContainerUI, slot_button: Button) -> void:
 	else:
 		if dest_item["id"] == drag_data["id"]:
 			# Same item → merge
-			var capacity_left = 99 - dest_item["quantity"]
+			var capacity_left = GameConstants.MAX_STACK_SIZE - dest_item["quantity"]
 			if capacity_left <= 0:
 				return
 			var deposit = min(drag_data["quantity"], capacity_left)
@@ -212,7 +323,7 @@ func end_drag():
 
 func _process(_delta: float) -> void:
 	if dragging and dragged_visual:
-		dragged_visual.position = get_viewport().get_mouse_position() - Vector2(32, 32)
+		dragged_visual.position = get_viewport().get_mouse_position() - GameConstants.DRAG_VISUAL_OFFSET
 
 # ------------------------------------------------------------------
 # 🟣 HELPER – keep icon & quantity in sync
@@ -221,8 +332,12 @@ func update_drag_visual() -> void:
 	if not dragged_visual:
 		return
 
-	var icon = dragged_visual.get_node("ItemIcon")
-	var qty  = dragged_visual.get_node("ItemQuantity")
+	var icon = dragged_visual.get_node_or_null("ItemIcon")
+	var qty  = dragged_visual.get_node_or_null("ItemQuantity")
+
+	if not icon or not qty:
+		push_warning("[DragManager] Dragged visual missing ItemIcon or ItemQuantity nodes")
+		return
 
 	qty.text = str(drag_data["quantity"])
 

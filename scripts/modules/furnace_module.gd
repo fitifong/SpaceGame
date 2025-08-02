@@ -21,28 +21,43 @@ var inventory: Array  = []
 var inventory_size: int = 0
 var ui_instance: Control = null
 
+# Module state tracking
+var module_state: GameConstants.ModuleState = GameConstants.ModuleState.IDLE
+
 func _ready():
 	add_to_group("interactable_modules")
-	interaction_prompt.z_index = 999
-	interaction_prompt.visible = false
-	set_inventory_size(2)
-	recipe_db.load_all_recipes()
+	
+	# FIXED: Null safety checks
+	if interaction_prompt:
+		interaction_prompt.z_index = 999
+		interaction_prompt.visible = false
+	else:
+		push_warning("[FurnaceModule] interaction_prompt not assigned")
+		
+	set_inventory_size(GameConstants.FURNACE_SLOTS)
+	
+	if recipe_db:
+		recipe_db.load_all_recipes()
+	else:
+		push_error("[FurnaceModule] Failed to create recipe database")
 
 	# Connect our own slot_updated signal so we can cancel mid-process
-	if not is_connected("slot_updated", Callable(self, "_on_slot_updated")):
-		slot_updated.connect(Callable(self, "_on_slot_updated"))
+	if not slot_updated.is_connected(_on_slot_updated):
+		slot_updated.connect(_on_slot_updated)
 
 func set_inventory_size(size: int) -> void:
+	# FIXED: Input validation
+	if size < 0:
+		push_error("[FurnaceModule] Invalid inventory size: %d" % size)
+		return
+		
 	inventory_size = size
 	inventory.resize(size)
 
 # Utility to get input/output indices dynamically
 func get_slot_index_by_type(slot_type: String) -> int:
-	if ui_instance:
-		if ui_instance.has_method("get_slot_index_by_type"):
-			return ui_instance.get_slot_index_by_type(slot_type)
-		else:
-			push_warning("UI instance lacks get_slot_index_by_type() method.")
+	if ui_instance and ui_instance.has_method("get_slot_index_by_type"):
+		return ui_instance.get_slot_index_by_type(slot_type)
 	else:
 		# Don't warn if UI is simply closed — normal during _process()
 		pass
@@ -51,13 +66,25 @@ func get_slot_index_by_type(slot_type: String) -> int:
 	return 0 if slot_type == "input" else 1
 
 func get_recipe(item: ItemResource) -> FurnaceRecipe:
+	if not recipe_db:
+		push_error("[FurnaceModule] No recipe database available")
+		return null
+		
+	if not item:
+		return null
+		
 	for recipe in recipe_db.recipes:
-		if recipe.input_item == item:
+		if recipe and recipe.input_item == item:
 			return recipe
 	return null
 
 # Called both by the module (when inventory changes) and by UI for visuals
 func _on_slot_updated(index: int) -> void:
+	# FIXED: Input validation
+	if index < 0 or index >= inventory.size():
+		push_warning("[FurnaceModule] Invalid slot index in _on_slot_updated: %d" % index)
+		return
+		
 	var in_index = get_slot_index_by_type("input")
 	# If the input slot was cleared, cancel any active smelt
 	if index == in_index and inventory[in_index] == null:
@@ -65,6 +92,7 @@ func _on_slot_updated(index: int) -> void:
 
 func cancel_smelting() -> void:
 	is_smelting = false
+	module_state = GameConstants.ModuleState.IDLE
 	smelt_timer = 0.0
 	current_recipe = null
 	reserved_input = {}
@@ -79,7 +107,7 @@ func _process(delta: float) -> void:
 
 	# 1) Mid-smelt guard: cancel if input removed or swapped
 	if not reserved_input.is_empty():
-		if input_item == null:
+		if not input_item:
 			# Input cleared entirely
 			cancel_smelting()
 			return
@@ -94,15 +122,19 @@ func _process(delta: float) -> void:
 
 	# 3) If we are mid-smelt, advance it
 	if not reserved_input.is_empty():
-		var recipe    = current_recipe
-		var output_id = recipe.output_item      # <— declare it here
-		smelt_timer  += delta
+		var recipe = current_recipe
+		if not recipe:
+			cancel_smelting()
+			return
+			
+		var output_id = recipe.output_item
+		smelt_timer += delta
 
-		if smelt_timer >= recipe["smelt_time"]:
+		if smelt_timer >= recipe.smelt_time:
 			# --- Validate output slot before consuming input ---
 			if output_item != null and output_item["id"] != output_id:
 				return
-			elif output_item != null and output_item["quantity"] >= 99:
+			elif output_item != null and output_item["quantity"] >= GameConstants.MAX_STACK_SIZE:
 				# Full stack, wait
 				return
 
@@ -114,7 +146,7 @@ func _process(delta: float) -> void:
 			slot_updated.emit(in_index)
 
 			# --- Produce output ---
-			if output_item == null:
+			if not output_item:
 				inventory[out_index] = {
 					"id": output_id,
 					"quantity": 1
@@ -124,35 +156,37 @@ func _process(delta: float) -> void:
 			slot_updated.emit(out_index)
 
 			# --- Finalize this smelt cycle ---
-			smelt_timer      = 0.0
-			reserved_input   = {}
-			current_recipe   = null
+			smelt_timer = 0.0
+			reserved_input = {}
+			current_recipe = null
 
 			# Hide bar and stop if no more input
 			var refreshed = inventory[in_index]
-			if refreshed == null or refreshed["quantity"] <= 0:
+			if not refreshed or refreshed["quantity"] <= 0:
 				smelt_progress_updated.emit(0.0)
 				is_smelting = false
+				module_state = GameConstants.ModuleState.IDLE
 			return
 
 		# Still smelting—emit progress
-		var pct = smelt_timer / recipe["smelt_time"]
+		var pct = smelt_timer / recipe.smelt_time
 		smelt_progress_updated.emit(clamp(pct, 0.0, 1.0))
 		return
 
 	# 4) Start a fresh smelt if input is valid
 	if input_item != null and input_item["quantity"] > 0:
 		var recipe = get_recipe(input_item["id"])
-		if recipe == null:
+		if not recipe:
 			return
 		if typeof(recipe.smelt_time) != TYPE_FLOAT or recipe.smelt_time <= 0.0:
 			# No smelt recipe—do nothing
 			return
 
-		is_smelting    = true
+		is_smelting = true
+		module_state = GameConstants.ModuleState.PROCESSING
 		reserved_input = {"id": input_item["id"]}
 		current_recipe = recipe
-		smelt_timer    = 0.0
+		smelt_timer = 0.0
 		smelt_progress_updated.emit(0.0)
 
 # -----------------------------------------
@@ -160,37 +194,62 @@ func _process(delta: float) -> void:
 # -----------------------------------------
 func _on_interaction_area_body_entered(body: Node2D) -> void:
 	if body is Player:
-		body.modules_in_range.append(self)
+		if "modules_in_range" in body:
+			body.modules_in_range.append(self)
+		else:
+			push_warning("[FurnaceModule] Player missing modules_in_range array")
 
 func _on_interaction_area_body_exited(body: Node2D) -> void:
 	if body is Player:
-		body.modules_in_range.erase(self)
+		if "modules_in_range" in body:
+			body.modules_in_range.erase(self)
 		if ui_instance:
 			close()
 
 func open():
-	if ui_instance == null:
-		if furnace_ui_scene == null:
-			push_error("[ERROR] furnace_ui_scene is null!")
-			return
-
-		interaction_prompt.visible = false
-		ui_instance = furnace_ui_scene.instantiate()
-		UIManager.add_ui(ui_instance)
+	if ui_instance != null:
+		return
 		
+	if not furnace_ui_scene:
+		push_error("[FurnaceModule] furnace_ui_scene not assigned")
+		return
+
+	if interaction_prompt:
+		interaction_prompt.visible = false
+		
+	ui_instance = furnace_ui_scene.instantiate()
+	if not ui_instance:
+		push_error("[FurnaceModule] Failed to instantiate furnace UI")
+		return
+		
+	if UIManager:
+		UIManager.add_ui(ui_instance)
 		UIManager.register_ui(ui_instance)
+	else:
+		push_error("[FurnaceModule] UIManager not available")
+		return
+		
+	if ui_instance.has_method("set_inventory_ref"):
 		ui_instance.set_inventory_ref(self)
+	else:
+		push_error("[FurnaceModule] UI missing set_inventory_ref method")
 
-		# Connect UI’s output-slot update handler
-		if not self.slot_updated.is_connected(ui_instance._on_output_slot_updated):
-			self.slot_updated.connect(ui_instance._on_output_slot_updated)
+	# Connect UI's output-slot update handler
+	if ui_instance.has_method("_on_output_slot_updated"):
+		if not slot_updated.is_connected(ui_instance._on_output_slot_updated):
+			slot_updated.connect(ui_instance._on_output_slot_updated)
 
-		module_opened.emit(ui_instance)
+	module_opened.emit(ui_instance)
 
 func close():
-	interaction_prompt.visible = true
-	UIManager.unregister_ui(ui_instance)
+	if interaction_prompt:
+		interaction_prompt.visible = true
+		
+	if UIManager and ui_instance:
+		UIManager.unregister_ui(ui_instance)
+		
 	closed.emit()
+	
 	if ui_instance:
 		ui_instance.queue_free()
 		ui_instance = null
