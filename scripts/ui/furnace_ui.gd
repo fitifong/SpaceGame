@@ -1,97 +1,72 @@
+# scripts/ui/furnace_ui.gd
 extends ItemContainerUI
 
 @export var smelt_button: Button
 @export var input_slot: Button
 @export var output_slot: Button
+@export var progress_bar_sprite: AnimatedSprite2D  # drag-in your ProgressBar here
+
+var module_ref
 
 func _ready() -> void:
 	add_to_group("interactable_ui")
-	slot_type_map = {0: "input", 1: "output"}
+	slot_type_map = { 0: "input", 1: "output" }
 	super._ready()
 	visible = true
 
-	smelt_button.pressed.connect(_on_smelt_pressed)
-	# (No direct slot_updated connection here— it’s done by FurnaceModule.gd in open())
+	if smelt_button:
+		smelt_button.pressed.connect(_on_smelt_pressed)
 
-func set_inventory_ref(ref) -> void:
+	if progress_bar_sprite:
+		progress_bar_sprite.animation = "progress"
+		progress_bar_sprite.visible   = false
+
+func set_module_ref(ref) -> void:
+	module_ref = ref
 	inventory_data_ref = ref
 
-	# Connect smelt progress signal
-	if inventory_data_ref.has_signal("smelt_progress_updated"):
-		if not inventory_data_ref.smelt_progress_updated.is_connected(update_progress_bar):
-			inventory_data_ref.smelt_progress_updated.connect(update_progress_bar)
+	if module_ref and module_ref.has_signal("smelt_progress_updated"):
+		if not module_ref.smelt_progress_updated.is_connected(update_progress_bar):
+			module_ref.smelt_progress_updated.connect(update_progress_bar)
 
-	# Restore smelt button visual
-	update_smelt_button_visuals()
+	_update_smelt_button_visuals()
 
-	# If there's a current recipe and the timer is > 0, restore the bar
-	if inventory_data_ref.current_recipe != null and inventory_data_ref.smelt_timer > 0:
-		var percent = inventory_data_ref.smelt_timer / inventory_data_ref.current_recipe.smelt_time
-		update_progress_bar(percent)
+	if module_ref.smelt_enabled and module_ref.is_smelting:
+		var pct = module_ref.smelt_timer / module_ref.current_recipe.smelt_time
+		update_progress_bar(pct)
 	else:
-		# Or, if you want to hide it when there's no partial smelt in progress, do:
-		update_progress_bar(0.0)  # "hide" logic inside `update_progress_bar`
+		update_progress_bar(0.0)
 
 func _on_smelt_pressed() -> void:
-	if inventory_data_ref == null:
+	if module_ref:
+		module_ref.toggle_smelting_enabled()
+		_update_smelt_button_visuals()
+
+func _update_smelt_button_visuals() -> void:
+	if not smelt_button or not module_ref:
 		return
-	inventory_data_ref.is_smelting = not inventory_data_ref.is_smelting
-	update_smelt_button_visuals()
 
-func update_smelt_button_visuals() -> void:
-	if inventory_data_ref == null:
-		return
-
-	var is_active = inventory_data_ref.is_smelting
-	smelt_button.modulate = Color(1, 0.6, 0.2) if is_active else Color(1, 1, 1)
-
-	# Optional furnace sprite change
-	if inventory_data_ref.has_method("update_furnace_sprite"):
-		inventory_data_ref.update_furnace_sprite(is_active)
+	if module_ref.smelt_enabled:
+		smelt_button.modulate = Color(1, 0.6, 0.2)
+	else:
+		smelt_button.modulate = Color(1, 1, 1)
 
 func update_progress_bar(percent: float) -> void:
-	var progress_sprite = get_node_or_null("NinePatchRect/ProgressBar")
-	if progress_sprite == null:
+	if not progress_bar_sprite:
 		return
-	
-	# If we receive 0.0, that means "smelting is done" → hide the bar
+
 	if percent <= 0.0:
-		progress_sprite.visible = false
+		progress_bar_sprite.visible = false
 		return
 
-	# Otherwise show and update the frame
-	progress_sprite.visible = true
-
-	var clamped_percent = clamp(percent, 0.0, 1.0)
-	var frame_index = int(clamped_percent * 100/9)  # 0..10 for 11 frames
-	frame_index = clamp(frame_index, 0, 10)
-
-	if progress_sprite.has_method("set_frame"):
-		progress_sprite.set_frame(frame_index)
-
+	progress_bar_sprite.visible = true
+	var idx = int(clamp(percent, 0.0, 1.0) * 10)
+	progress_bar_sprite.frame = idx
 
 func _on_output_slot_updated(index: int) -> void:
-	# This is called from FurnaceModule’s slot_updated.emit()
 	if index != 1:
 		return
-
-	if inventory_data_ref == null:
-		return
-
-	# If the output slot is empty, hide the bar
-	var bar = get_node_or_null("NinePatchRect/ProgressBar")
-	var output_item = inventory_data_ref.inventory[1]
-
-	# If there's no item in the output slot, we hide the bar
-	if output_item == null and bar:
-		bar.visible = false
-
-func get_slot_index_by_type(requested_type: String) -> int:
-	# Safeguard if slot_type_map isn't defined
-	if not slot_type_map:
-		return -1
-
-	for index in slot_type_map.keys():
-		if slot_type_map[index] == requested_type:
-			return index
-	return -1  # If not found
+	var out = inventory_data_ref.get_item(1)
+	if out == null or out.is_empty():
+		if progress_bar_sprite:
+			progress_bar_sprite.visible = false

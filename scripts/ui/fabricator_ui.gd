@@ -1,17 +1,13 @@
+# scripts/ui/fabricator_ui.gd
 extends ItemContainerUI
 class_name FabricatorUI
 
-# -------------------- INVENTORY SLOTS --------------------
 @export var input_slots: Array[Button] = []
 @export var output_slot: Button
-
-# -------------------- RECIPE CONTROLS --------------------
 @export var make_button: Button
 @export var recipe_selector: OptionButton
 @export var quantity_spinbox: SpinBox
 @export var preview_time_label: Label
-
-# -------------------- PROGRESS DISPLAY --------------------
 @export var progress_bar: ProgressBar
 
 var module_ref: FabricatorModule = null
@@ -21,11 +17,10 @@ var is_showing_preview := false
 
 func _ready():
 	add_to_group("interactable_ui")
-	slot_type_map = {3: "output"}  # Assuming slot 3 is output
-	super._ready()  # This sets up the inventory slots via ItemContainerUI
+	slot_type_map = {3: "output"}
+	super._ready()
 	visible = true
 
-	# Connect UI signals (with null checks)
 	if make_button:
 		make_button.pressed.connect(_on_make_pressed)
 	if recipe_selector:
@@ -33,34 +28,23 @@ func _ready():
 	if quantity_spinbox:
 		quantity_spinbox.value_changed.connect(_on_quantity_changed)
 	
-	# Initial state
 	_update_make_button_state()
 
-# -------------------- MODULE CONNECTION --------------------
 func set_module_ref(module: FabricatorModule) -> void:
 	module_ref = module
-	inventory_data_ref = module  # For ItemContainerUI compatibility
+	inventory_data_ref = module
 	
-	# Connect to fabrication progress updates
 	if module_ref.has_signal("fabrication_progress_updated"):
 		if not module_ref.fabrication_progress_updated.is_connected(_on_fabrication_progress_updated):
 			module_ref.fabrication_progress_updated.connect(_on_fabrication_progress_updated)
 	
-	print("✅ Module reference set")
-	
-	# Check if we just completed a fabrication and should restore the recipe
 	_check_for_completed_fabrication()
-	
-	# Initial recipe check
 	_update_available_recipes()
 
 func _check_for_completed_fabrication():
-	# If the fabricator sprite is on frame 9 (completed), try to restore the last recipe
 	if module_ref and module_ref.fabricator_sprite.animation == "process" and module_ref.fabricator_sprite.frame == 9:
-		# Store the last completed recipe info for restoration
 		var last_recipe = module_ref.get_last_completed_recipe()
 		if last_recipe:
-			# We'll restore this after updating available recipes
 			call_deferred("_restore_last_recipe", last_recipe)
 
 func _on_fabrication_progress_updated(progress: float):
@@ -68,65 +52,46 @@ func _on_fabrication_progress_updated(progress: float):
 		progress_bar.value = progress
 		progress_bar.visible = progress > 0.0
 	
-	# Update time remaining display
 	if preview_time_label and module_ref and module_ref.is_processing:
 		var remaining_time = module_ref.total_fabrication_time - module_ref.fabrication_timer
 		preview_time_label.text = "Time remaining: %.1f seconds" % remaining_time
 
-# ⭐ SIMPLIFIED: Override update_slot without signal emissions
 func update_slot(index: int) -> void:
-	print("🔄 FabricatorUI: Slot ", index, " updated")
-	
-	# Call parent update first (handles visual updates)
 	super.update_slot(index)
 	
-	# ⭐ DIRECT UPDATE: Check recipes immediately without signals
 	if slot_type_map.get(index, "input") == "input":
-		print("📋 Input slot changed, updating recipes directly")
 		_update_available_recipes()
 	
-	# Handle output slot preview state
 	var output_slot_index = _get_output_slot_index()
 	if index == output_slot_index:
-		var actual_item = module_ref.inventory[index] if module_ref else null
+		var actual_item = _get_module_item(index)
 		
-		if actual_item != null:
-			# Real item exists, clear preview
+		if actual_item != null and not actual_item.is_empty():
 			is_showing_preview = false
 			_set_output_slot_preview_style(false)
 		elif current_recipe and not is_showing_preview:
-			# No real item but have recipe selected, show preview
 			_show_output_preview()
 
-# -------------------- RECIPE MANAGEMENT --------------------
+func _get_module_item(index: int) -> Dictionary:
+	return module_ref.inventory.get_item(index) if module_ref else {}
+
+func _get_module_inventory_size() -> int:
+	return module_ref.inventory.inventory_size if module_ref else 0
+
 func _update_available_recipes():
 	if not module_ref:
 		return
 	
-	print("=== UPDATING AVAILABLE RECIPES ===")
-	
-	# Get current input items from module's actual inventory
 	var input_items = _get_current_input_items()
-	print("📦 Current input items: ", input_items.size())
-	for item in input_items:
-		if item.has("id") and item["id"]:
-			print("  - ", item["id"].name, " x", item["quantity"])
-	
-	# ⭐ DIRECT CALL: Ask module for matching recipes (no signals involved)
 	available_recipes = module_ref.get_available_recipes(input_items)
-	print("🔍 Found ", available_recipes.size(), " matching recipes")
 	
-	# Update recipe dropdown (with null check)
 	if recipe_selector:
 		recipe_selector.clear()
 		recipe_selector.add_item("Select Recipe...")
 		
-		for i in range(available_recipes.size()):
-			var recipe = available_recipes[i]
+		for recipe in available_recipes:
 			recipe_selector.add_item(recipe.output_item.name)
-			print("➕ Added recipe: ", recipe.output_item.name)
 	
-	# Reset selection
 	current_recipe = null
 	_update_recipe_preview()
 	_update_make_button_state()
@@ -137,21 +102,21 @@ func _get_current_input_items() -> Array[Dictionary]:
 	if not module_ref:
 		return inputs
 	
-	# Collect all non-output slots from the actual inventory
-	for i in range(module_ref.inventory.size()):
+	var inventory_size = _get_module_inventory_size()
+	
+	for i in range(inventory_size):
 		if slot_type_map.get(i, "input") == "input":
-			var item = module_ref.inventory[i]
-			if item != null:
+			var item = _get_module_item(i)
+			if item != null and not item.is_empty():
 				inputs.append(item)
 	
 	return inputs
 
-# -------------------- RECIPE SELECTION & PREVIEW --------------------
 func _on_recipe_selected(index: int):
 	if index <= 0 or index > available_recipes.size():
 		current_recipe = null
 	else:
-		current_recipe = available_recipes[index - 1]  # -1 because first item is "Select Recipe..."
+		current_recipe = available_recipes[index - 1]
 	
 	_update_recipe_preview()
 	_update_quantity_limits()
@@ -162,22 +127,16 @@ func _update_recipe_preview():
 		_clear_preview()
 		return
 	
-	# Show preview in output slot
 	_show_output_preview()
-	
-	# Update time preview
 	_update_time_preview()
 
 func _clear_preview():
-	# Clear time label
 	if preview_time_label:
 		preview_time_label.text = ""
 	
-	# Clear progress bar
 	if progress_bar:
 		progress_bar.visible = false
 	
-	# Clear output slot preview
 	_clear_output_preview()
 
 func _show_output_preview():
@@ -185,28 +144,22 @@ func _show_output_preview():
 		return
 	
 	var output_slot_index = _get_output_slot_index()
-	var actual_item = module_ref.inventory[output_slot_index] if module_ref else null
+	var actual_item = _get_module_item(output_slot_index)
 	
-	# If there's already a real item in the output slot, don't show preview
-	if actual_item != null:
+	if actual_item != null and not actual_item.is_empty():
 		is_showing_preview = false
 		return
 	
-	# Show preview item in output slot
 	var selected_quantity = int(quantity_spinbox.value) if quantity_spinbox else 1
 	var total_output = current_recipe.output_quantity * selected_quantity
 	
-	# Create preview item data
 	var preview_item = {
 		"id": current_recipe.output_item,
 		"quantity": total_output
 	}
 	
-	# Display preview in output slot
 	set_item(output_slot, preview_item)
 	is_showing_preview = true
-	
-	# Make the slot visually distinct (preview state)
 	_set_output_slot_preview_style(true)
 
 func _clear_output_preview():
@@ -214,10 +167,9 @@ func _clear_output_preview():
 		return
 	
 	var output_slot_index = _get_output_slot_index()
-	var actual_item = module_ref.inventory[output_slot_index] if module_ref else null
+	var actual_item = _get_module_item(output_slot_index)
 	
-	# Only clear if showing preview and no real item exists
-	if is_showing_preview and actual_item == null:
+	if is_showing_preview and (actual_item == null or actual_item.is_empty()):
 		set_empty(output_slot)
 		is_showing_preview = false
 		_set_output_slot_preview_style(false)
@@ -227,22 +179,16 @@ func _set_output_slot_preview_style(is_preview: bool):
 		return
 	
 	if is_preview:
-		# Make slot appear as preview (slightly transparent, different tint)
-		output_slot.modulate = Color(1, 1, 1, 0.7)  # Semi-transparent
-		
-		# Add preview indicator if slot has a background
+		output_slot.modulate = Color(1, 1, 1, 0.7)
 		var slot_sprite = output_slot.get_slot_sprite()
 		if slot_sprite:
-			slot_sprite.modulate = Color.CYAN  # Tint background cyan for preview
+			slot_sprite.modulate = Color.CYAN
 	else:
-		# Normal slot appearance
 		output_slot.modulate = Color.WHITE
-		
 		var slot_sprite = output_slot.get_slot_sprite()
 		if slot_sprite:
 			slot_sprite.modulate = Color.WHITE
 
-# -------------------- QUANTITY & VALIDATION --------------------
 func _update_quantity_limits():
 	if not current_recipe or not module_ref:
 		if quantity_spinbox:
@@ -252,11 +198,8 @@ func _update_quantity_limits():
 	
 	var input_items = _get_current_input_items()
 	var max_from_inputs = module_ref.get_max_craftable(current_recipe, input_items)
-	
-	# Also check output slot capacity (from actual inventory)
 	var output_slot_index = _get_output_slot_index()
 	var max_from_output = _get_output_slot_capacity(output_slot_index)
-	
 	var max_craftable = min(max_from_inputs, max_from_output)
 	
 	if quantity_spinbox:
@@ -267,31 +210,25 @@ func _get_output_slot_index() -> int:
 	for index in slot_type_map.keys():
 		if slot_type_map[index] == "output":
 			return index
-	return 3  # Default fallback
+	return 3
 
 func _get_output_slot_capacity(output_index: int) -> int:
 	if output_index < 0 or not module_ref:
 		return 0
 	
-	# Check actual inventory slot capacity
-	var output_item = module_ref.inventory[output_index]
+	var output_item = _get_module_item(output_index)
 	
-	if output_item == null:
-		# Empty slot can hold up to 99
+	if output_item == null or output_item.is_empty():
 		return 99 / current_recipe.output_quantity
 	elif output_item["id"] == current_recipe.output_item:
-		# Same item, check remaining capacity
 		var remaining_capacity = 99 - output_item["quantity"]
 		return remaining_capacity / current_recipe.output_quantity
 	else:
-		# Different item, can't place anything
 		return 0
 
-# -------------------- TIME & STATE MANAGEMENT --------------------
 func _on_quantity_changed(value: float):
 	_update_time_preview()
 	_update_make_button_state()
-	# Update preview quantity in output slot
 	if current_recipe:
 		_show_output_preview()
 
@@ -301,7 +238,6 @@ func _update_time_preview():
 	
 	var selected_quantity = int(quantity_spinbox.value) if quantity_spinbox else 1
 	var total_time = current_recipe.fab_time * selected_quantity
-	
 	preview_time_label.text = "Time: %d seconds" % total_time
 
 func _update_make_button_state():
@@ -317,52 +253,35 @@ func _update_make_button_state():
 			var max_craftable = module_ref.get_max_craftable(current_recipe, input_items)
 			var output_capacity = _get_output_slot_capacity(_get_output_slot_index())
 			
-			can_make = (max_craftable >= selected_quantity and 
-					   output_capacity >= selected_quantity)
+			can_make = (max_craftable >= selected_quantity and output_capacity >= selected_quantity)
 	
 	make_button.disabled = not can_make
 	make_button.modulate = Color.WHITE if can_make else Color.GRAY
 
-# -------------------- OVERRIDE SLOT INTERACTION FOR OUTPUT --------------------
-# Override the slot interaction to prevent grabbing preview items
 func _on_slot_gui_input(event: InputEvent, slot: Button):
-	# If this is the output slot and showing preview, block interaction
 	if slot == output_slot and is_showing_preview:
 		if event is InputEventMouseButton and event.pressed:
-			# Block all mouse interactions with preview
 			return
 	
-	# Otherwise, use normal slot interaction
 	super._on_slot_gui_input(event, slot)
 
-# -------------------- FABRICATION TRIGGER --------------------
 func _on_make_pressed():
 	if not current_recipe or not module_ref:
 		return
 	
 	var selected_quantity = int(quantity_spinbox.value) if quantity_spinbox else 1
-	
-	# Clear preview before starting fabrication
 	_clear_output_preview()
-	
-	# Start fabrication via module
 	module_ref.start_fabrication(current_recipe, selected_quantity)
 
-# -------------------- RECIPE RESTORATION --------------------
 func _restore_last_recipe(last_recipe: FabricatorRecipe):
 	if not last_recipe or not recipe_selector:
 		return
 	
-	# Find the recipe in our available recipes
 	for i in range(available_recipes.size()):
 		if available_recipes[i] == last_recipe:
-			# Select this recipe in the dropdown (+1 because first item is "Select Recipe...")
 			recipe_selector.selected = i + 1
 			current_recipe = last_recipe
 			_update_recipe_preview()
 			_update_quantity_limits()
 			_update_make_button_state()
-			print("🔄 Restored last recipe: ", last_recipe.output_item.name)
 			return
-	
-	print("⚠️ Could not restore last recipe - not enough materials")

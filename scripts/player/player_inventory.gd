@@ -1,100 +1,78 @@
+# scripts/player/player_inventory.gd
+# COMPONENT-BASED VERSION to match other modules
 extends Node
+
+const InventoryComponent = preload("res://scripts/components/inventory_component.gd")
 
 signal slot_updated(index)
 
-var inventory: Array = []
-var inventory_size: int = 0
+var inventory_component: InventoryComponent
 var player_node: Node = null
 
-# ----------------- 🟢 PLAYER INVENTORY SETUP ----------------- #
+# Legacy compatibility - forward to component
+var inventory: Array:
+	get:
+		return inventory_component.inventory if inventory_component else []
+var inventory_size: int:
+	get:
+		return inventory_component.inventory_size if inventory_component else 0
+
 func _ready():
-	await get_tree().process_frame     # ← guarantees ItemDatabase is ready
-	set_inventory_size(GameConstants.PLAYER_INVENTORY_SIZE)
+	await get_tree().process_frame
+	_create_component()
+	_set_initial_items()
+
+func _create_component():
+	inventory_component = InventoryComponent.new()
+	inventory_component.name = "Inventory"
+	add_child(inventory_component)
+	inventory_component.initialize(GameConstants.PLAYER_INVENTORY_SIZE)
 	
-	# FIXED: Null safety when setting initial items
+	# Forward component signals
+	inventory_component.slot_updated.connect(slot_updated.emit)
+
+func _set_initial_items():
 	if ItemDatabase:
 		var iron_ore = ItemDatabase.get_item_data(2)
 		var metal_sheet = ItemDatabase.get_item_data(5)
 		
 		if iron_ore:
-			inventory[0] = {"id": iron_ore, "quantity": 10}
-		else:
-			push_warning("[PlayerInventory] Could not find item with ID 2")
-			
+			inventory_component.add_item(0, {"id": iron_ore, "quantity": 10})
 		if metal_sheet:
-			inventory[1] = {"id": metal_sheet, "quantity": 10}
-		else:
-			push_warning("[PlayerInventory] Could not find item with ID 5")
-	else:
-		push_error("[PlayerInventory] ItemDatabase not available")
+			inventory_component.add_item(1, {"id": metal_sheet, "quantity": 10})
 
-func set_inventory_size(size: int) -> void:
-	# FIXED: Input validation
-	if size < 0:
-		push_error("[PlayerInventory] Invalid inventory size: %d" % size)
-		return
-		
-	inventory_size = size
-	inventory.resize(size)
-
-# Stores reference to the player for item pickups
 func set_player_reference(player):
-	# FIXED: Null safety
 	if not player:
-		push_error("[PlayerInventory] Cannot set null player reference")
+		push_error("Cannot set null player reference")
 		return
-		
 	player_node = player
 
-##
-# Attempts to place 'item' in this inventory, obeying a stack limit.
-# Returns an integer: the number of leftover items that couldn't be placed.
-#    - If leftover == 0, all items fit in the inventory.
-#    - If leftover > 0, the inventory is full (or all stacks are at max).
 func add_pickup(pickup_item: Dictionary) -> int:
-	# FIXED: Input validation
-	if not pickup_item:
-		push_error("[PlayerInventory] add_pickup() called with null pickup_item")
-		return 0
-		
-	if not pickup_item.has("item_id") or pickup_item["item_id"] == null:
-		push_error("[PlayerInventory] add_pickup() called with missing 'item_id'")
+	"""Add item to inventory, returns leftover quantity"""
+	if not pickup_item or not pickup_item.has("item_id") or not pickup_item.has("quantity"):
 		return pickup_item.get("quantity", 0)
 
-	if not pickup_item.has("quantity") or pickup_item["quantity"] <= 0:
-		push_warning("[PlayerInventory] add_pickup() called with invalid quantity: %s" % str(pickup_item.get("quantity", "null")))
-		return pickup_item.get("quantity", 0)
-
-	var item_id = pickup_item["item_id"]  # ✅ This is now an ItemResource!
+	var item_id = pickup_item["item_id"]
 	var leftover = pickup_item["quantity"]
 
-	# FIXED: Validate item_id is ItemResource
-	if not (item_id is ItemResource):
-		push_error("[PlayerInventory] item_id must be ItemResource, got: %s" % str(typeof(item_id)))
+	if not (item_id is ItemResource) or leftover <= 0:
 		return leftover
 
-	# ----------------------- PASS 1: Merge into existing stacks -----------------------
-	for i in range(inventory.size()):
-		if leftover <= 0:
-			break
-		var slot_item = inventory[i]
-		if slot_item != null and slot_item["id"] == item_id:
-			var capacity_left = GameConstants.MAX_STACK_SIZE - slot_item["quantity"]
-			if capacity_left > 0:
-				var deposit = min(capacity_left, leftover)
-				slot_item["quantity"] += deposit
-				leftover -= deposit
-				if deposit > 0:
-					emit_signal("slot_updated", i)
+	# Use component's auto_stack_item method
+	var item_to_add = {"id": item_id, "quantity": leftover}
+	return inventory_component.auto_stack_item(item_to_add)
 
-	# ----------------------- PASS 2: Place into empty slots -----------------------
-	for i in range(inventory.size()):
-		if leftover <= 0:
-			break
-		if inventory[i] == null or inventory[i]["id"] == null:
-			var to_place = min(GameConstants.MAX_STACK_SIZE, leftover)
-			inventory[i] = {"id": item_id, "quantity": to_place}
-			leftover -= to_place
-			emit_signal("slot_updated", i)
+# Legacy methods that forward to component
+func update_inventory_slot(index: int, new_item: Dictionary = {}):
+	if inventory_component:
+		inventory_component.add_item(index, new_item)
 
-	return leftover
+func get_item_from_slot(index: int) -> Dictionary:
+	if inventory_component:
+		return inventory_component.get_item(index)
+	return {}
+
+func remove_item_from_slot(index: int) -> Dictionary:
+	if inventory_component:
+		return inventory_component.remove_item(index)
+	return {}

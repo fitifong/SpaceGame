@@ -99,7 +99,7 @@ animations = [{
 "speed": 0.0
 }]
 
-[node name="FurnaceUI" type="Control" node_paths=PackedStringArray("smelt_button", "input_slot", "output_slot")]
+[node name="FurnaceUI" type="Control" node_paths=PackedStringArray("smelt_button", "input_slot", "output_slot", "progress_bar_sprite")]
 layout_mode = 3
 anchors_preset = 8
 anchor_left = 0.5
@@ -114,6 +114,7 @@ script = ExtResource("1_ltdxc")
 smelt_button = NodePath("NinePatchRect/SmeltButton")
 input_slot = NodePath("NinePatchRect/GridContainer/SlotUI1")
 output_slot = NodePath("NinePatchRect/GridContainer/OutputSlot")
+progress_bar_sprite = NodePath("NinePatchRect/ProgressBar")
 slot_template = ExtResource("3_c7nuh")
 output_slot_template = ExtResource("4_hlov0")
 ui_slot = ExtResource("4_s1t2i")
@@ -147,6 +148,7 @@ offset_top = 20.0
 offset_right = 55.0
 offset_bottom = 63.0
 grow_horizontal = 2
+toggle_mode = true
 text = "Smelt"
 
 [node name="GridContainer" type="GridContainer" parent="NinePatchRect"]

@@ -1,5 +1,10 @@
+# scripts/modules/storage_module.gd
 extends StaticBody2D
 class_name StorageModule
+
+const InventoryComponent = preload("res://scripts/components/inventory_component.gd")
+const UIHandlerComponent = preload("res://scripts/components/ui_handler_component.gd")
+const InteractionComponent = preload("res://scripts/components/interaction_component.gd")
 
 signal module_opened(ui_instance)
 signal closed
@@ -9,65 +14,48 @@ signal slot_updated(index)
 @export var interaction_prompt: Control
 @export var interaction_area: Area2D
 
-var inventory: Array = []
+var inventory: InventoryComponent
+var ui_handler: UIHandlerComponent
+var interaction: InteractionComponent
 
-var inventory_size: int = 0
-var ui_instance: Control = null  # Instance of the storage UI
-# ----------------- 🟢 INITIALIZATION ----------------- #
 func _ready():
 	add_to_group("interactable_modules")
-	interaction_prompt.z_index = 999
-	interaction_prompt.visible = false
+	_create_components()
+	_connect_signals()
+
+func _create_components():
+	inventory = InventoryComponent.new()
+	inventory.name = "Inventory"
+	add_child(inventory)
+	inventory.initialize(25)
 	
-	set_inventory_size(25)
+	ui_handler = UIHandlerComponent.new()
+	ui_handler.name = "UIHandler"
+	add_child(ui_handler)
+	ui_handler.initialize(self, storage_ui_scene)
+	
+	interaction = InteractionComponent.new()
+	interaction.name = "Interaction"
+	add_child(interaction)
+	interaction.initialize(self, interaction_area, interaction_prompt)
 
-func set_inventory_size(size: int) -> void:
-	inventory_size = size
-	inventory.resize(size)
+func _connect_signals():
+	inventory.slot_updated.connect(slot_updated.emit)
+	ui_handler.ui_opened.connect(module_opened.emit)
+	ui_handler.ui_closed.connect(closed.emit)
+	interaction.interaction_requested.connect(_on_interaction_requested)
 
-# ----------------- 🔵 PLAYER INTERACTION ----------------- #
-# Shows the interaction prompt when the player enters range
-func _on_interaction_area_body_entered(body: Node2D) -> void:
-	if body is Player:
-		body.modules_in_range.append(self)
+func _on_interaction_requested():
+	if ui_handler.is_open():
+		ui_handler.close()
+	else:
+		ui_handler.open()
 
-# Hides the interaction prompt and closes UI if the player leaves
-func _on_interaction_area_body_exited(body: Node2D) -> void:
-	if body is Player:
-		body.modules_in_range.erase(self)
-		if ui_instance:
-			close()
-
-# ----------------- 🟠 OPENING & CLOSING UI ----------------- #
-# Opens the storage UI when interacted with
 func open():
-	if ui_instance == null:
-		if storage_ui_scene == null:
-			push_error("[ERROR] storage_ui_scene is null! Ensure it's assigned.")
-			return  
+	ui_handler.open()
 
-		interaction_prompt.visible = false
-		
-		ui_instance = storage_ui_scene.instantiate()
-		
-		if ui_instance.has_method("set_inventory_ref"):
-			ui_instance.set_inventory_ref(self)
-		else:
-			ui_instance.inventory_data_ref = self
-
-		ui_instance.inventory_data_ref = self  # ✅ Let the UI show our inventory
-		UIManager.add_ui(ui_instance)
-
-		UIManager.register_ui(ui_instance)  # Register the storage UI
-		
-		# Set the inventory reference
-		module_opened.emit(ui_instance)
-
-# Closes the storage UI and cleans up references
 func close():
-	interaction_prompt.visible = true
-	UIManager.unregister_ui(ui_instance)  # Unregister the storage UI
-	closed.emit()
-	if ui_instance:
-		ui_instance.queue_free()
-		ui_instance = null
+	ui_handler.close()
+
+func is_ui_open() -> bool:
+	return ui_handler.is_open()
