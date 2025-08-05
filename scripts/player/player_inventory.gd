@@ -2,8 +2,6 @@
 # COMPONENT-BASED VERSION to match other modules
 extends Node
 
-const InventoryComponent = preload("res://scripts/components/inventory_component.gd")
-
 signal slot_updated(index)
 
 var inventory_component: InventoryComponent

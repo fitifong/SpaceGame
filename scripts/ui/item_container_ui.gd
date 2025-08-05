@@ -1,5 +1,5 @@
 # scripts/ui/item_container_ui.gd
-# PURE COMPONENT VERSION - No legacy code
+# UPDATED VERSION - Uses consolidated UIManager instead of separate managers
 extends Control
 class_name ItemContainerUI
 
@@ -147,7 +147,7 @@ func _inventory_refresh():
 		_rebuild_grid_container(grid_container, config, slots_for_this_grid, start_inv_index)
 		current_inventory_index += slots_for_this_grid
 
-func _rebuild_grid_container(grid_container: GridContainer, config: Dictionary, slot_count: int, start_inventory_index: int):
+func _rebuild_grid_container(grid_container: GridContainer, config: Dictionary, _slot_count: int, start_inventory_index: int):
 	var slots_to_cleanup: Array = []
 	
 	# Remove all children, queue slots for cleanup
@@ -250,11 +250,11 @@ func update_slot(index: int) -> void:
 		set_empty(slot)
 
 func _on_ui_closed():
-	if DragManager and DragManager.dragging:
-		DragManager.cancel_drag()
+	if UIManager and UIManager.dragging:
+		UIManager.cancel_drag()
 
 # ------------------------------------------------------------------
-# SLOT INTERACTION
+# SLOT INTERACTION - UPDATED TO USE CONSOLIDATED UIMANAGER
 # ------------------------------------------------------------------
 func _on_slot_gui_input(event: InputEvent, slot: Button):
 	if not event or not slot:
@@ -267,20 +267,20 @@ func _on_slot_gui_input(event: InputEvent, slot: Button):
 		
 		# SHIFT + LEFT CLICK
 		if event.button_index == MOUSE_BUTTON_LEFT and Input.is_key_pressed(KEY_SHIFT):
-			if UiInteractionManager:
-				UiInteractionManager.shift_click(self, index)
+			if UIManager:
+				UIManager.shift_click(self, index)
 			return
 
-		# Normal drag logic
-		if UiInteractionManager:
-			if UiInteractionManager.is_dragging():
+		# Normal drag logic - Now using consolidated UIManager
+		if UIManager:
+			if UIManager.is_dragging():
 				if event.button_index == MOUSE_BUTTON_RIGHT:
-					UiInteractionManager.partial_drop(self, slot)
+					UIManager.partial_drop(self, slot)
 				elif event.button_index == MOUSE_BUTTON_LEFT:
-					UiInteractionManager.full_drop(self, slot)
+					UIManager.full_drop(self, slot)
 			else:
 				if event.button_index == MOUSE_BUTTON_LEFT or event.button_index == MOUSE_BUTTON_RIGHT:
-					UiInteractionManager.start_drag(self, slot, event)
+					UIManager.start_drag(self, slot, event)
 
 # ------------------------------------------------------------------
 # SLOT VISUALS (OPTIMIZED)
@@ -312,11 +312,11 @@ func _update_hover_states():
 			if not slot_sprite:
 				continue
 
-			# Check if this is the drag source slot
+			# Check if this is the drag source slot - Updated to use UIManager
 			var is_drag_source = false
-			if DragManager and DragManager.dragging:
+			if UIManager and UIManager.dragging:
 				var global_index = get_slot_global_index(slot)
-				if DragManager.original_source_container == self and global_index == DragManager.original_source_index:
+				if UIManager.original_source_container == self and global_index == UIManager.original_source_index:
 					is_drag_source = true
 
 			if is_drag_source:

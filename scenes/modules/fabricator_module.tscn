@@ -163,12 +163,12 @@ size = Vector2(32, 14)
 [sub_resource type="CircleShape2D" id="CircleShape2D_e8qio"]
 radius = 19.0263
 
-[node name="Fabricator" type="StaticBody2D" node_paths=PackedStringArray("interaction_prompt", "interaction_area", "fabricator_sprite")]
+[node name="Fabricator" type="StaticBody2D" node_paths=PackedStringArray("fabricator_sprite", "interaction_area", "interaction_prompt")]
 script = ExtResource("1_0whxp")
 fabricator_ui_scene = ExtResource("2_728py")
-interaction_prompt = NodePath("InteractionPrompt")
-interaction_area = NodePath("InteractionArea")
 fabricator_sprite = NodePath("FabricatorSprite")
+interaction_area = NodePath("InteractionArea")
+interaction_prompt = NodePath("InteractionPrompt")
 
 [node name="FabricatorSprite" type="AnimatedSprite2D" parent="."]
 sprite_frames = SubResource("SpriteFrames_k6qpr")

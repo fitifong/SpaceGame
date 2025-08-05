@@ -52,7 +52,7 @@ func _on_fabrication_progress_updated(progress: float):
 		progress_bar.value = progress
 		progress_bar.visible = progress > 0.0
 	
-	if preview_time_label and module_ref and module_ref.is_processing:
+	if preview_time_label and module_ref and module_ref.fabrication_active:
 		var remaining_time = module_ref.total_fabrication_time - module_ref.fabrication_timer
 		preview_time_label.text = "Time remaining: %.1f seconds" % remaining_time
 
@@ -219,14 +219,14 @@ func _get_output_slot_capacity(output_index: int) -> int:
 	var output_item = _get_module_item(output_index)
 	
 	if output_item == null or output_item.is_empty():
-		return 99 / current_recipe.output_quantity
+		return int(99.0 / current_recipe.output_quantity)
 	elif output_item["id"] == current_recipe.output_item:
 		var remaining_capacity = 99 - output_item["quantity"]
-		return remaining_capacity / current_recipe.output_quantity
+		return int(remaining_capacity / current_recipe.output_quantity)
 	else:
 		return 0
 
-func _on_quantity_changed(value: float):
+func _on_quantity_changed(_value: float):
 	_update_time_preview()
 	_update_make_button_state()
 	if current_recipe:
@@ -247,7 +247,7 @@ func _update_make_button_state():
 	var can_make = false
 	
 	if current_recipe and module_ref:
-		var selected_quantity = quantity_spinbox.value if quantity_spinbox else 1
+		var selected_quantity = int(quantity_spinbox.value) if quantity_spinbox else 1
 		if selected_quantity > 0:
 			var input_items = _get_current_input_items()
 			var max_craftable = module_ref.get_max_craftable(current_recipe, input_items)
@@ -256,7 +256,10 @@ func _update_make_button_state():
 			can_make = (max_craftable >= selected_quantity and output_capacity >= selected_quantity)
 	
 	make_button.disabled = not can_make
-	make_button.modulate = Color.WHITE if can_make else Color.GRAY
+	if can_make:
+		make_button.modulate = Color.WHITE
+	else:
+		make_button.modulate = Color.GRAY
 
 func _on_slot_gui_input(event: InputEvent, slot: Button):
 	if slot == output_slot and is_showing_preview:

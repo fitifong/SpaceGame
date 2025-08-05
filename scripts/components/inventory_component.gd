@@ -23,7 +23,11 @@ func add_item(index: int, item: Dictionary) -> bool:
 	if index < 0 or index >= inventory_size:
 		return false
 	
-	inventory[index] = item.duplicate() if not item.is_empty() else null
+	if item.is_empty():
+		inventory[index] = null
+	else:
+		inventory[index] = item.duplicate()
+	
 	slot_updated.emit(index)
 	inventory_changed.emit()
 	return true
@@ -33,7 +37,10 @@ func get_item(index: int) -> Dictionary:
 		return {}
 	
 	var item = inventory[index]
-	return item.duplicate() if item != null else {}
+	if item != null:
+		return item.duplicate()
+	else:
+		return {}
 
 func remove_item(index: int) -> Dictionary:
 	if index < 0 or index >= inventory_size:

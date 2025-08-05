@@ -1,76 +1,54 @@
 # scripts/modules/furnace_module.gd
-extends StaticBody2D
+extends ModularInventoryBase
 class_name FurnaceModule
 
-const InventoryComponent   = preload("res://scripts/components/inventory_component.gd")
-const UIHandlerComponent   = preload("res://scripts/components/ui_handler_component.gd")
-const InteractionComponent = preload("res://scripts/components/interaction_component.gd")
-
-signal module_opened(ui_instance)
-signal closed
-signal slot_updated(index)
+# Furnace-specific signals
 signal smelt_progress_updated(progress: float)
 
-@export var interaction_prompt: Control
-@export var interaction_area: Area2D
+# Furnace-specific exports
 @export var furnace_ui_scene: PackedScene
 
-var inventory: InventoryComponent
-var ui_handler: UIHandlerComponent
-var interaction: InteractionComponent
-
+# Furnace-specific components and state
 @onready var recipe_db := FurnaceRecipeDatabase.new()
 
-# --- toggle state; when true we auto-start smelts on new input
+# Smelting state
 var smelt_enabled := false
-
-# --- runtime state
-var is_smelting   := false
-var cooling_down  := false
-var smelt_timer   := 0.0
+var is_smelting := false
+var cooling_down := false
+var smelt_timer := 0.0
 var current_recipe: FurnaceRecipe = null
-var reserved_input: Dictionary     = {}
+var reserved_input: Dictionary = {}
 
-func _ready():
-	add_to_group("interactable_modules")
-	_create_components()
-	_connect_signals()
+func _get_default_inventory_size() -> int:
+	"""Furnace modules have 2 slots (input + output)"""
+	return GameConstants.FURNACE_SLOTS
+
+func _get_ui_scene() -> PackedScene:
+	"""Use furnace-specific UI scene if provided, otherwise use default"""
+	return furnace_ui_scene if furnace_ui_scene else ui_scene
+
+func _post_setup():
+	"""Furnace-specific initialization after components are set up"""
+	super._post_setup()
 	recipe_db.load_all_recipes()
 
-func _create_components():
-	inventory = InventoryComponent.new()
-	inventory.name = "Inventory"
-	add_child(inventory)
-	inventory.initialize(GameConstants.FURNACE_SLOTS)
-
-	ui_handler = UIHandlerComponent.new()
-	ui_handler.name = "UIHandler"
-	add_child(ui_handler)
-	ui_handler.initialize(self, furnace_ui_scene)
-
-	interaction = InteractionComponent.new()
-	interaction.name = "Interaction"
-	add_child(interaction)
-	interaction.initialize(self, interaction_area, interaction_prompt)
-
-func _connect_signals():
-	inventory.slot_updated.connect(slot_updated.emit)
-	inventory.slot_updated.connect(_on_slot_updated)
-	ui_handler.ui_opened.connect(module_opened.emit)
-	ui_handler.ui_closed.connect(closed.emit)
-	interaction.interaction_requested.connect(_on_interaction_requested)
-
 func _process(delta: float):
-	# --- Active smelting: just advance forward ---
+	super._process(delta)
+	_handle_smelting_process(delta)
+
+func _handle_smelting_process(delta: float):
+	"""Handle the smelting process logic"""
+	# Active smelting: advance forward
 	if is_smelting:
 		smelt_timer += delta
 		var progress = smelt_timer / current_recipe.smelt_time
 		smelt_progress_updated.emit(progress)
 
 		if smelt_timer >= current_recipe.smelt_time:
-			_complete_smelt(inventory.get_item(0), inventory.get_item(1))
+			_complete_smelt()
 		return
-	# --- Toggle-off cooldown: reverse until zero ---
+	
+	# Toggle-off cooldown: reverse until zero
 	elif cooling_down:
 		smelt_timer -= delta
 		if smelt_timer <= 0.0:
@@ -82,120 +60,135 @@ func _process(delta: float):
 			var rev_progress = smelt_timer / current_recipe.smelt_time
 			smelt_progress_updated.emit(rev_progress)
 		return
-	# idle—nothing happening
+
+func _on_slot_updated(index: int):
+	"""Handle slot updates for furnace logic"""
+	super._on_slot_updated(index)
+	
+	if index != 0:  # Only react to input slot changes
+		return
+
+	# Only react if smelt is enabled
+	if not smelt_enabled:
+		return
+
+	var input_item = get_item(0)
+	if input_item.is_empty():
+		_cancel_smelting()
+		return
+
+	var recipe = _get_recipe(input_item.get("id"))
+	if recipe:
+		# Restart immediately with new ore
+		current_recipe = recipe
+		reserved_input = {"id": input_item.get("id")}
+		smelt_timer = 0.0
+		is_smelting = true
+		cooling_down = false
+		smelt_progress_updated.emit(0.0)
+	else:
+		_cancel_smelting()
+
+# ------------------------------------------------------------------
+# FURNACE-SPECIFIC METHODS
+# ------------------------------------------------------------------
 
 func toggle_smelting_enabled():
+	"""Toggle the auto-smelting feature"""
 	smelt_enabled = not smelt_enabled
 
 	if smelt_enabled:
-		_start_smelting_if_possible()
+		# If we're in cooldown, resume smelting immediately at current progress
+		if cooling_down:
+			cooling_down = false
+			is_smelting = true
+			# smelt_timer already has the current progress, so we continue from there
+		else:
+			_start_smelting_if_possible()
 	else:
-		# mid-smelt? begin cooldown; else just clear
+		# Mid-smelt? Begin cooldown; else just clear
 		if is_smelting:
 			cooling_down = true
-			is_smelting  = false
+			is_smelting = false
 		else:
 			_cancel_smelting()
 
 func _start_smelting_if_possible():
+	"""Start smelting if conditions are met"""
 	if is_smelting or cooling_down or not smelt_enabled:
 		return
 
-	var input_item = inventory.get_item(0)
+	var input_item = get_item(0)
 	if input_item.is_empty():
 		return
 
-	var recipe = _get_recipe(input_item.id)
+	var recipe = _get_recipe(input_item.get("id"))
 	if recipe and recipe.smelt_time > 0.0:
-		is_smelting    = true
-		reserved_input = { "id": input_item.id }
+		is_smelting = true
+		reserved_input = {"id": input_item.get("id")}
 		current_recipe = recipe
-		smelt_timer    = 0.0
+		smelt_timer = 0.0
 		smelt_progress_updated.emit(0.0)
 
 func _cancel_smelting():
-	is_smelting    = false
-	cooling_down   = false
-	smelt_timer    = 0.0
+	"""Cancel current smelting operation"""
+	is_smelting = false
+	cooling_down = false
+	smelt_timer = 0.0
 	current_recipe = null
 	reserved_input = {}
 	smelt_progress_updated.emit(0.0)
 
-func _complete_smelt(input_item: Dictionary, output_item: Dictionary):
+func _complete_smelt():
+	"""Complete the current smelting operation"""
+	var input_item = get_item(0)
+	var output_item = get_item(1)
 	var output_id = current_recipe.output_item
 
+	# Check if output slot can accept the result
 	if output_item and not output_item.is_empty():
-		if output_item.id != output_id or output_item.quantity >= GameConstants.MAX_STACK_SIZE:
+		if output_item.get("id") != output_id or output_item.get("quantity", 0) >= GameConstants.MAX_STACK_SIZE:
 			return
 
-	# consume one ore
-	if input_item.quantity > 1:
-		input_item.quantity -= 1
-		inventory.add_item(0, input_item)
+	# Consume one input item
+	if input_item.get("quantity", 0) > 1:
+		input_item["quantity"] -= 1
+		add_item(0, input_item)
 	else:
-		inventory.remove_item(0)
+		remove_item(0)
 
-	# produce bar
+	# Produce output item
 	if output_item.is_empty():
-		inventory.add_item(1, { "id": output_id, "quantity": 1 })
+		add_item(1, {"id": output_id, "quantity": 1})
 	else:
-		output_item.quantity += 1
-		inventory.add_item(1, output_item)
+		output_item["quantity"] += 1
+		add_item(1, output_item)
 
-	# reset timer & reserved_input
-	smelt_timer    = 0.0
+	# Reset state
+	smelt_timer = 0.0
 	reserved_input = {}
-	is_smelting    = false
+	is_smelting = false
 
-	# continuous smelt?
+	# Continue smelting if enabled
 	if smelt_enabled:
 		_start_smelting_if_possible()
 
-func _on_slot_updated(index: int):
-	if index != 0:
-		return
-
-	# only react if smelt is enabled
-	if not smelt_enabled:
-		return
-
-	var input_item = inventory.get_item(0)
-	if input_item.is_empty():
-		_cancel_smelting()
-		return
-
-	var recipe = _get_recipe(input_item.id)
-	if recipe:
-		# restart immediately with new ore
-		current_recipe = recipe
-		reserved_input = { "id": input_item.id }
-		smelt_timer    = 0.0
-		is_smelting    = true
-		cooling_down   = false
-		smelt_progress_updated.emit(0.0)
-	else:
-		_cancel_smelting()
-
 func _get_recipe(item_id) -> FurnaceRecipe:
+	"""Find recipe for the given input item"""
+	if not recipe_db or not item_id:
+		return null
+	
 	for recipe in recipe_db.recipes:
 		if recipe.input_item == item_id:
 			return recipe
 	return null
 
-func _on_interaction_requested():
-	if ui_handler.is_open():
-		ui_handler.close()
-	else:
-		ui_handler.open()
+# ------------------------------------------------------------------
+# LEGACY API COMPATIBILITY
+# ------------------------------------------------------------------
 
-# External UI helpers—unchanged
-func open() -> void:
-	ui_handler.open()
-func close() -> void:
-	ui_handler.close()
-func is_ui_open() -> bool:
-	return ui_handler.is_open()
 func get_slot_index_by_type(slot_type: String) -> int:
+	"""Legacy method for UI compatibility"""
 	if slot_type == "input":
 		return 0
 	else:

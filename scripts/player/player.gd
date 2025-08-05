@@ -62,6 +62,7 @@ func _physics_process(_delta):
 	move_and_slide()
 
 func update_closest_module():
+	"""Update the closest module based on component-based modules"""
 	if modules_in_range.is_empty():
 		if closest_module:
 			_hide_module_prompt(closest_module)
@@ -93,27 +94,62 @@ func _process(_delta):
 		_interact_with_module(closest_module)
 
 func _is_module_ui_open(module: Node) -> bool:
-	return module.is_ui_open() if module.has_method("is_ui_open") else false
+	"""Check if module UI is open using component-based system"""
+	# For ModularInventoryBase modules
+	if "is_ui_open" in module and module.has_method("is_ui_open"):
+		return module.is_ui_open()
+	
+	# Legacy fallback
+	if module.has_method("is_ui_open"):
+		return module.is_ui_open()
+	
+	return false
 
 func _close_module_ui(module: Node):
-	if module.has_method("close"):
+	"""Close module UI using component-based system"""
+	# For ModularInventoryBase modules
+	if "close" in module and module.has_method("close"):
 		module.close()
 
 func _show_module_prompt(module: Node):
+	"""Show interaction prompt using component-based system"""
+	# Try component-based approach first
 	var interaction_component = module.get_node_or_null("Interaction")
 	if interaction_component and "prompt_node" in interaction_component and interaction_component.prompt_node:
 		interaction_component.prompt_node.visible = true
+		return
+	
+	# Legacy fallback for older modules
+	if "interaction_prompt" in module and module.interaction_prompt:
+		module.interaction_prompt.visible = true
 
 func _hide_module_prompt(module: Node):
+	"""Hide interaction prompt using component-based system"""
+	# Try component-based approach first
 	var interaction_component = module.get_node_or_null("Interaction")
 	if interaction_component and "prompt_node" in interaction_component and interaction_component.prompt_node:
 		interaction_component.prompt_node.visible = false
+		return
+	
+	# Legacy fallback for older modules
+	if "interaction_prompt" in module and module.interaction_prompt:
+		module.interaction_prompt.visible = false
 
 func _interact_with_module(module: Node):
+	"""Interact with module using component-based system"""
+	# Try component-based approach first
 	var interaction_component = module.get_node_or_null("Interaction")
 	if interaction_component and interaction_component.has_method("request_interaction"):
 		interaction_component.request_interaction()
-	elif module.has_method("open") and module.has_method("close"):
+		return
+	
+	# Direct method call for ModularInventoryBase modules
+	if module.has_method("_on_interaction_requested"):
+		module._on_interaction_requested()
+		return
+	
+	# Legacy fallback
+	if module.has_method("open") and module.has_method("close"):
 		if _is_module_ui_open(module):
 			module.close()
 		else:

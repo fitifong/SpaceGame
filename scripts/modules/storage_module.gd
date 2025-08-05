@@ -1,61 +1,35 @@
 # scripts/modules/storage_module.gd
-extends StaticBody2D
+extends ModularInventoryBase
 class_name StorageModule
 
-const InventoryComponent = preload("res://scripts/components/inventory_component.gd")
-const UIHandlerComponent = preload("res://scripts/components/ui_handler_component.gd")
-const InteractionComponent = preload("res://scripts/components/interaction_component.gd")
-
-signal module_opened(ui_instance)
-signal closed
-signal slot_updated(index)
-
+# Storage-specific configuration
 @export var storage_ui_scene: PackedScene
-@export var interaction_prompt: Control
-@export var interaction_area: Area2D
 
-var inventory: InventoryComponent
-var ui_handler: UIHandlerComponent
-var interaction: InteractionComponent
+func _get_default_inventory_size() -> int:
+	"""Storage modules have 25 slots by default"""
+	return GameConstants.STORAGE_MODULE_SIZE
 
-func _ready():
-	add_to_group("interactable_modules")
-	_create_components()
-	_connect_signals()
+func _get_ui_scene() -> PackedScene:
+	"""Use storage-specific UI scene if provided, otherwise use default"""
+	return storage_ui_scene if storage_ui_scene else ui_scene
 
-func _create_components():
-	inventory = InventoryComponent.new()
-	inventory.name = "Inventory"
-	add_child(inventory)
-	inventory.initialize(25)
-	
-	ui_handler = UIHandlerComponent.new()
-	ui_handler.name = "UIHandler"
-	add_child(ui_handler)
-	ui_handler.initialize(self, storage_ui_scene)
-	
-	interaction = InteractionComponent.new()
-	interaction.name = "Interaction"
-	add_child(interaction)
-	interaction.initialize(self, interaction_area, interaction_prompt)
+func _post_setup():
+	"""Storage-specific initialization after components are set up"""
+	super._post_setup()
+	# Storage modules don't need any special setup beyond the base class
+	pass
 
-func _connect_signals():
-	inventory.slot_updated.connect(slot_updated.emit)
-	ui_handler.ui_opened.connect(module_opened.emit)
-	ui_handler.ui_closed.connect(closed.emit)
-	interaction.interaction_requested.connect(_on_interaction_requested)
+func _on_ui_opened(ui_instance: Control):
+	"""Handle storage UI opening"""
+	super._on_ui_opened(ui_instance)
+	# Storage modules can add specific UI setup here if needed
+	pass
 
-func _on_interaction_requested():
-	if ui_handler.is_open():
-		ui_handler.close()
-	else:
-		ui_handler.open()
+func _on_ui_closed():
+	"""Handle storage UI closing"""
+	super._on_ui_closed()
+	# Storage modules can add specific cleanup here if needed
+	pass
 
-func open():
-	ui_handler.open()
-
-func close():
-	ui_handler.close()
-
-func is_ui_open() -> bool:
-	return ui_handler.is_open()
+# Storage modules use the default interaction behavior (toggle UI)
+# No need to override _on_interaction_requested()

@@ -1,4 +1,6 @@
-extends Node
+# scripts/game_constants.gd
+# STATIC VERSION - No longer a singleton
+class_name GameConstants
 
 # Inventory and Stack Constants
 const MAX_STACK_SIZE = 99
