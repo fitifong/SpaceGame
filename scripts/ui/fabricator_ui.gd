@@ -10,6 +10,12 @@ class_name FabricatorUI
 @export var preview_time_label: Label
 @export var progress_bar: ProgressBar
 
+# Power control UI elements
+@export var power_efficiency_slider: HSlider
+@export var power_efficiency_label: Label
+@export var power_consumption_label: Label
+@export var power_status_label: Label
+
 var module_ref: FabricatorModule = null
 var current_recipe: FabricatorRecipe = null
 var available_recipes: Array[FabricatorRecipe] = []
@@ -28,7 +34,16 @@ func _ready():
 	if quantity_spinbox:
 		quantity_spinbox.value_changed.connect(_on_quantity_changed)
 	
+	# Connect power control signals
+	if power_efficiency_slider:
+		power_efficiency_slider.value_changed.connect(_on_efficiency_changed)
+		power_efficiency_slider.min_value = 0.5
+		power_efficiency_slider.max_value = 1.5
+		power_efficiency_slider.step = 0.05
+		power_efficiency_slider.value = 1.0
+	
 	_update_make_button_state()
+	_update_power_displays()
 
 func set_module_ref(module: FabricatorModule) -> void:
 	module_ref = module
@@ -38,8 +53,15 @@ func set_module_ref(module: FabricatorModule) -> void:
 		if not module_ref.fabrication_progress_updated.is_connected(_on_fabrication_progress_updated):
 			module_ref.fabrication_progress_updated.connect(_on_fabrication_progress_updated)
 	
+	# Connect to PowerManager for live power updates
+	if PowerManager:
+		if not PowerManager.power_level_changed.is_connected(_on_power_level_changed):
+			PowerManager.power_level_changed.connect(_on_power_level_changed)
+	
 	_check_for_completed_fabrication()
 	_update_available_recipes()
+	_attempt_recipe_restoration()  # Try to restore any previous selection
+	_update_power_displays()
 
 func _check_for_completed_fabrication():
 	if module_ref and module_ref.fabricator_sprite.animation == "process" and module_ref.fabricator_sprite.frame == 9:
@@ -56,11 +78,84 @@ func _on_fabrication_progress_updated(progress: float):
 		var remaining_time = module_ref.total_fabrication_time - module_ref.fabrication_timer
 		preview_time_label.text = "Time remaining: %.1f seconds" % remaining_time
 
+func _on_power_level_changed(_current_power: float, _max_power: float):
+	"""Update power status when power levels change"""
+	_update_power_status()
+
+func _on_efficiency_changed(value: float):
+	"""Handle efficiency slider changes"""
+	if module_ref and module_ref.has_power_component():
+		module_ref.set_power_efficiency(value)
+	
+	_update_power_displays()
+	_update_time_preview()
+
+func _update_power_displays():
+	"""Update all power-related UI elements"""
+	if not module_ref or not module_ref.has_power_component():
+		_hide_power_controls()
+		return
+	
+	_show_power_controls()
+	
+	var power_info = module_ref.get_power_info()
+	var efficiency = power_info.get("efficiency", 1.0)
+	
+	# Update efficiency display
+	if power_efficiency_label:
+		power_efficiency_label.text = "Efficiency: %.0f%%" % (efficiency * 100.0)
+	
+	if power_efficiency_slider and abs(power_efficiency_slider.value - efficiency) > 0.01:
+		power_efficiency_slider.value = efficiency
+	
+	# Update power consumption display
+	if power_consumption_label and current_recipe:
+		var base_power = 400.0  # Base fabricator power consumption
+		var actual_power = module_ref.get_power_cost_for_efficiency(base_power, efficiency)
+		power_consumption_label.text = "Power: %.0f PU/s" % actual_power
+	
+	_update_power_status()
+
+func _update_power_status():
+	"""Update power availability status"""
+	if not power_status_label or not module_ref:
+		return
+	
+	if module_ref.has_power():
+		power_status_label.text = "Power: Available"
+		power_status_label.modulate = Color.GREEN
+	else:
+		power_status_label.text = "Power: Insufficient"
+		power_status_label.modulate = Color.RED
+
+func _show_power_controls():
+	"""Show power control UI elements"""
+	if power_efficiency_slider:
+		power_efficiency_slider.visible = true
+	if power_efficiency_label:
+		power_efficiency_label.visible = true
+	if power_consumption_label:
+		power_consumption_label.visible = true
+	if power_status_label:
+		power_status_label.visible = true
+
+func _hide_power_controls():
+	"""Hide power control UI elements"""
+	if power_efficiency_slider:
+		power_efficiency_slider.visible = false
+	if power_efficiency_label:
+		power_efficiency_label.visible = false
+	if power_consumption_label:
+		power_consumption_label.visible = false
+	if power_status_label:
+		power_status_label.visible = false
+
 func update_slot(index: int) -> void:
 	super.update_slot(index)
 	
 	if slot_type_map.get(index, "input") == "input":
 		_update_available_recipes()
+		_attempt_recipe_restoration()  # Try to restore after inventory changes
 	
 	var output_slot_index = _get_output_slot_index()
 	if index == output_slot_index:
@@ -115,12 +210,17 @@ func _get_current_input_items() -> Array[Dictionary]:
 func _on_recipe_selected(index: int):
 	if index <= 0 or index > available_recipes.size():
 		current_recipe = null
+		if module_ref:
+			module_ref.set_last_selected_recipe(null)
 	else:
 		current_recipe = available_recipes[index - 1]
+		if module_ref:
+			module_ref.set_last_selected_recipe(current_recipe)
 	
 	_update_recipe_preview()
 	_update_quantity_limits()
 	_update_make_button_state()
+	_update_power_displays()
 
 func _update_recipe_preview():
 	if not current_recipe:
@@ -237,8 +337,18 @@ func _update_time_preview():
 		return
 	
 	var selected_quantity = int(quantity_spinbox.value) if quantity_spinbox else 1
-	var total_time = current_recipe.fab_time * selected_quantity
-	preview_time_label.text = "Time: %d seconds" % total_time
+	var base_time = current_recipe.fab_time * selected_quantity
+	
+	var efficiency = 1.0
+	if power_efficiency_slider:
+		efficiency = power_efficiency_slider.value
+	else:
+		efficiency = 1.0
+	var actual_time = base_time
+	if module_ref:
+		actual_time = module_ref.get_fabrication_time_for_efficiency(base_time, efficiency)
+	
+	preview_time_label.text = "Time: %.1f seconds" % actual_time
 
 func _update_make_button_state():
 	if not make_button:
@@ -252,8 +362,9 @@ func _update_make_button_state():
 			var input_items = _get_current_input_items()
 			var max_craftable = module_ref.get_max_craftable(current_recipe, input_items)
 			var output_capacity = _get_output_slot_capacity(_get_output_slot_index())
+			var has_power = module_ref.has_power()
 			
-			can_make = (max_craftable >= selected_quantity and output_capacity >= selected_quantity)
+			can_make = (max_craftable >= selected_quantity and output_capacity >= selected_quantity and has_power)
 	
 	make_button.disabled = not can_make
 	if can_make:
@@ -273,8 +384,10 @@ func _on_make_pressed():
 		return
 	
 	var selected_quantity = int(quantity_spinbox.value) if quantity_spinbox else 1
+	var efficiency = power_efficiency_slider.value if power_efficiency_slider else 1.0
+	
 	_clear_output_preview()
-	module_ref.start_fabrication(current_recipe, selected_quantity)
+	module_ref.start_fabrication(current_recipe, selected_quantity, efficiency)
 
 func _restore_last_recipe(last_recipe: FabricatorRecipe):
 	if not last_recipe or not recipe_selector:
@@ -287,4 +400,39 @@ func _restore_last_recipe(last_recipe: FabricatorRecipe):
 			_update_recipe_preview()
 			_update_quantity_limits()
 			_update_make_button_state()
+			_update_power_displays()
 			return
+
+func _attempt_recipe_restoration():
+	"""Try to restore the last selected recipe if available and craftable"""
+	if not module_ref:
+		return
+	
+	var last_selected = module_ref.get_last_selected_recipe()
+	if not last_selected:
+		return
+	
+	print("Attempting to restore recipe: %s" % last_selected.output_item.name)
+	
+	# Check if recipe is in available recipes
+	var recipe_available = false
+	for recipe in available_recipes:
+		if recipe == last_selected:
+			recipe_available = true
+			break
+	
+	if not recipe_available:
+		print("Recipe not available with current materials")
+		module_ref.set_last_selected_recipe(null)
+		return
+	
+	# Check if we have enough materials
+	var input_items = _get_current_input_items()
+	var max_craftable = module_ref.get_max_craftable(last_selected, input_items)
+	
+	if max_craftable > 0:
+		_restore_last_recipe(last_selected)
+		print("Successfully restored recipe: %s" % last_selected.output_item.name)
+	else:
+		print("Cannot restore recipe: insufficient materials")
+		module_ref.set_last_selected_recipe(null)

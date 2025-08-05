@@ -6,12 +6,20 @@ class_name ModularInventoryBase
 @onready var inventory: InventoryComponent = InventoryComponent.new()
 @onready var ui_handler: UIHandlerComponent = UIHandlerComponent.new()
 @onready var interaction: InteractionComponent = InteractionComponent.new()
+@onready var power: PowerComponent = null  # Optional component
 
 # Configuration exports
 @export var default_inventory_size: int = 10
 @export var ui_scene: PackedScene
 @export var interaction_area: Area2D
 @export var interaction_prompt: Control
+
+# Power configuration exports (only used if power component is enabled)
+@export_group("Power Settings")
+@export var uses_power: bool = false
+@export var idle_power_draw: float = 0.0  # PU/sec when idle
+@export var active_power_draw: float = 0.0  # PU/sec when active
+@export var has_power_efficiency: bool = false  # Can adjust power/time tradeoff
 
 # Signals that modules can emit
 signal module_opened(ui_instance)
@@ -54,6 +62,20 @@ func _create_components():
 	if area and not interaction.initialize(self, area, prompt):
 		push_error("Failed to initialize interaction component in %s" % name)
 		return
+	
+	# Set up power component (optional)
+	if _should_use_power():
+		power = PowerComponent.new()
+		power.name = "Power"
+		add_child(power)
+		var power_config = _get_power_configuration()
+		if not power.initialize(self, power_config.idle, power_config.active, power_config.efficiency):
+			push_error("Failed to initialize power component in %s" % name)
+			return
+		
+		# Register with PowerManager
+		if PowerManager:
+			PowerManager.register_power_component(power)
 
 func _connect_signals():
 	"""Wire component signals to virtual methods"""
@@ -76,6 +98,11 @@ func _connect_signals():
 	interaction.interaction_requested.connect(_on_interaction_requested)
 	interaction.player_entered_range.connect(_on_player_entered_range)
 	interaction.player_exited_range.connect(_on_player_exited_range)
+	
+	# Power signals (if power component exists)
+	if power:
+		power.power_efficiency_changed.connect(_on_power_efficiency_changed)
+		power.power_consumption_changed.connect(_on_power_consumption_changed)
 
 # ------------------------------------------------------------------
 # CONFIGURATION GETTERS (Override in subclasses)
@@ -96,6 +123,18 @@ func _get_interaction_area() -> Area2D:
 func _get_interaction_prompt() -> Control:
 	"""Override to provide custom interaction prompt"""
 	return interaction_prompt
+
+func _should_use_power() -> bool:
+	"""Override to enable power component. Default uses export variable."""
+	return uses_power
+
+func _get_power_configuration() -> Dictionary:
+	"""Override to provide custom power configuration"""
+	return {
+		"idle": idle_power_draw,
+		"active": active_power_draw, 
+		"efficiency": has_power_efficiency
+	}
 
 # ------------------------------------------------------------------
 # VIRTUAL METHODS (Override in subclasses)
@@ -131,6 +170,18 @@ func _on_player_entered_range(_player: Node):
 
 func _on_player_exited_range(_player: Node):
 	"""Called when player exits interaction range. Override for custom behavior."""
+	pass
+
+func _on_power_efficiency_changed(_efficiency: float):
+	"""Called when power efficiency changes. Override for custom behavior."""
+	pass
+
+func _on_power_consumption_changed(_consumption: float):
+	"""Called when power consumption changes. Override for custom behavior."""
+	pass
+
+func _on_power_availability_changed(_has_power: bool):
+	"""Called when power availability changes. Override for custom behavior."""
 	pass
 
 # ------------------------------------------------------------------
@@ -201,6 +252,40 @@ func clear_inventory():
 	inventory.clear_inventory()
 
 # ------------------------------------------------------------------
+# POWER CONVENIENCE METHODS
+# ------------------------------------------------------------------
+
+func has_power_component() -> bool:
+	"""Check if this module has a power component"""
+	return power != null
+
+func set_power_active(active: bool):
+	"""Set power component active state"""
+	if power:
+		power.set_active(active)
+
+func get_power_efficiency() -> float:
+	"""Get current power efficiency"""
+	return power.get_efficiency_multiplier() if power else 1.0
+
+func set_power_efficiency(efficiency: float):
+	"""Set power efficiency (if supported)"""
+	if power:
+		power.set_power_efficiency(efficiency)
+
+func has_power() -> bool:
+	"""Check if module has sufficient power"""
+	return not power or power.has_power()
+
+func can_operate() -> bool:
+	"""Check if module can operate (has power and other conditions)"""
+	return not power or power.can_operate()
+
+func get_power_info() -> Dictionary:
+	"""Get power information for UI display"""
+	return power.get_power_info() if power else {}
+
+# ------------------------------------------------------------------
 # PROCESS METHOD
 # ------------------------------------------------------------------
 
@@ -228,10 +313,17 @@ func _validate_setup() -> bool:
 		push_error("ModularInventoryBase: Missing interaction component")
 		return false
 	
+	if _should_use_power() and not power:
+		push_error("ModularInventoryBase: Power component required but not initialized")
+		return false
+	
 	return true
 
 func _exit_tree():
 	"""Clean up when node is removed from tree"""
+	if power and PowerManager:
+		PowerManager.unregister_power_component(power)
+	
 	if interaction:
 		interaction._exit_tree()
 	if ui_handler:

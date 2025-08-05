@@ -22,8 +22,9 @@ aseprite_executable_path="C:/Program Files (x86)/Steam/steamapps/common/Aseprite
 [autoload]
 
 PlayerInventory="*res://scripts/player/player_inventory.gd"
-UIManager="*res://scripts/ui_managers/ui_manager.gd"
+UIManager="*res://scripts/singletons/ui_manager.gd"
 ItemDatabase="*res://scripts/databases/items/item_database.gd"
+PowerManager="*res://scripts/singletons/power_manager.gd"
 
 [display]
 
