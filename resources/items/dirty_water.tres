@@ -1,0 +1,13 @@
+[gd_resource type="Resource" script_class="ItemResource" load_steps=3 format=3 uid="uid://bmtybw7htmj7b"]
+
+[ext_resource type="Script" uid="uid://by2c2bn6gvm1" path="res://scripts/databases/items/item_resource.gd" id="1_ru8fq"]
+[ext_resource type="Texture2D" uid="uid://ds3i0y6ehsihe" path="res://assets/items/dirty_water.aseprite" id="2_ru8fq"]
+
+[resource]
+script = ExtResource("1_ru8fq")
+id = 7
+name = "Dirty Water"
+texture = ExtResource("2_ru8fq")
+item_type = "material"
+quantity = 1
+metadata/_custom_type_script = "uid://by2c2bn6gvm1"

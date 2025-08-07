@@ -1,4 +1,4 @@
-[gd_scene load_steps=18 format=4 uid="uid://n8vp2wlbrt8m"]
+[gd_scene load_steps=20 format=4 uid="uid://n8vp2wlbrt8m"]
 
 [ext_resource type="PackedScene" uid="uid://t35wdyso8tvt" path="res://scenes/player.tscn" id="1_q1vwe"]
 [ext_resource type="Script" uid="uid://bovtmqx57jm4q" path="res://scripts/game.gd" id="1_trtic"]
@@ -10,8 +10,10 @@
 [ext_resource type="PackedScene" uid="uid://qyn6vwp3rihq" path="res://scenes/ui/player_inventory_ui.tscn" id="5_dmb38"]
 [ext_resource type="PackedScene" uid="uid://dtyhf0ivgfneu" path="res://scenes/inventory_item.tscn" id="6_kmk3q"]
 [ext_resource type="PackedScene" uid="uid://bexmlc645gjlq" path="res://scenes/modules/fabricator_module.tscn" id="10_kvuet"]
+[ext_resource type="PackedScene" uid="uid://rqryeiwjwbix" path="res://scenes/ui/module_ui/fabricator_ui.tscn" id="12_ca42v"]
 [ext_resource type="PackedScene" uid="uid://cl71xkt5rpfnk" path="res://scenes/modules/furnace_module.tscn" id="12_dinhu"]
 [ext_resource type="PackedScene" uid="uid://r3kwlam405ca" path="res://scenes/modules/storage_module.tscn" id="12_uui71"]
+[ext_resource type="PackedScene" uid="uid://bwuoxmln31uyj" path="res://scenes/modules/water_recycler_module.tscn" id="13_ir15t"]
 [ext_resource type="Resource" uid="uid://cc6jtl7lijcxa" path="res://resources/items/metal_sheet.tres" id="13_kvuet"]
 
 [sub_resource type="TileSetAtlasSource" id="TileSetAtlasSource_3eav5"]
@@ -717,12 +719,19 @@ position = Vector2(-11, -91)
 
 [node name="Furnace" parent="World/Modules" instance=ExtResource("12_dinhu")]
 z_index = 1
-position = Vector2(85, -91)
+position = Vector2(-58, -91)
 
 [node name="Fabricator" parent="World/Modules" instance=ExtResource("10_kvuet")]
 z_index = 1
 position = Vector2(-84, -86)
 scale = Vector2(0.80651, 0.80651)
+fabricator_ui_scene = null
+ui_scene = ExtResource("12_ca42v")
+uses_power = true
+
+[node name="WaterRecycler" parent="World/Modules" instance=ExtResource("13_ir15t")]
+z_index = 1
+position = Vector2(87, -88)
 
 [node name="Items" type="Node2D" parent="World"]
 

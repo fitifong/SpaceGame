@@ -1,0 +1,15 @@
+[gd_resource type="Resource" script_class="FabricatorRecipe" load_steps=5 format=3 uid="uid://du2eb8dtgwkaa"]
+
+[ext_resource type="Script" uid="uid://by2c2bn6gvm1" path="res://scripts/databases/items/item_resource.gd" id="1_h37j6"]
+[ext_resource type="Resource" uid="uid://u77qxe5aakvn" path="res://resources/items/water_filter_dirty.tres" id="2_syuis"]
+[ext_resource type="Resource" uid="uid://b7dig4o1gksea" path="res://resources/items/water_filter_clean.tres" id="3_h37j6"]
+[ext_resource type="Script" uid="uid://70obt1nb3vj2" path="res://scripts/databases/fabricator/fabricator_recipe.gd" id="5_lo126"]
+
+[resource]
+script = ExtResource("5_lo126")
+input_items = Array[ExtResource("1_h37j6")]([ExtResource("2_syuis")])
+input_quantities = Array[int]([1])
+output_item = ExtResource("3_h37j6")
+output_quantity = 1
+fab_time = 10
+metadata/_custom_type_script = "uid://70obt1nb3vj2"

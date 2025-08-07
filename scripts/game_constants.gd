@@ -27,6 +27,7 @@ const SLOT_TYPE_INPUT = "input"
 const SLOT_TYPE_OUTPUT = "output"
 const SLOT_TYPE_FUEL = "fuel"
 const SLOT_TYPE_CATALYST = "catalyst"
+const SLOT_TYPE_FILTER = "filter"
 
 # Mouse interaction constants
 const MOUSE_MOVE_THRESHOLD = 1.0  # Minimum pixels before updating hover states
@@ -37,3 +38,14 @@ const PLAYER_INVENTORY_SIZE = 9
 const STORAGE_MODULE_SIZE = 25
 const FABRICATOR_SLOTS = 4
 const FURNACE_SLOTS = 2
+const WATER_RECYCLER_SLOTS = 3  # Input, Filter, Output
+
+# Water Recycler Constants
+const WATER_RECYCLER_INPUT_SLOT = 0    # Dirty water input
+const WATER_RECYCLER_FILTER_SLOT = 1   # Water filter (becomes used filter)
+const WATER_RECYCLER_OUTPUT_SLOT = 2   # Clean water output
+
+# Water Processing Settings
+const WATER_PROCESSING_TIME = 3.0  # Seconds to process 1 dirty water
+const FILTER_DURABILITY = 10  # Number of uses per filter
+const WATER_RECYCLER_POWER_CONSUMPTION = 200.0  # PU/sec when processing

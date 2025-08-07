@@ -1,0 +1,13 @@
+[gd_resource type="Resource" script_class="ItemResource" load_steps=3 format=3 uid="uid://b7dig4o1gksea"]
+
+[ext_resource type="Script" uid="uid://by2c2bn6gvm1" path="res://scripts/databases/items/item_resource.gd" id="1_dpj1v"]
+[ext_resource type="Texture2D" uid="uid://dju7fj6xfms6p" path="res://assets/items/water_filter_clean.aseprite" id="2_dpj1v"]
+
+[resource]
+script = ExtResource("1_dpj1v")
+id = 9
+name = "Water Filter (Clean)"
+texture = ExtResource("2_dpj1v")
+item_type = "component"
+quantity = 1
+metadata/_custom_type_script = "uid://by2c2bn6gvm1"

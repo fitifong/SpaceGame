@@ -32,12 +32,18 @@ func _create_component():
 func _set_initial_items():
 	if ItemDatabase:
 		var iron_ore = ItemDatabase.get_item_data(2)
-		var metal_sheet = ItemDatabase.get_item_data(5)
+		var dirty_water = ItemDatabase.get_item_data(7)
+		var water_filter = ItemDatabase.get_item_data(9)
+		var dirty_water_filter = ItemDatabase.get_item_data(10)
 		
 		if iron_ore:
 			inventory_component.add_item(0, {"id": iron_ore, "quantity": 10})
-		if metal_sheet:
-			inventory_component.add_item(1, {"id": metal_sheet, "quantity": 10})
+		if dirty_water:
+			inventory_component.add_item(1, {"id": dirty_water, "quantity": 10})
+		if water_filter:
+			inventory_component.add_item(2, {"id": water_filter, "quantity": 1})
+		if dirty_water_filter:
+			inventory_component.add_item(3, {"id": dirty_water_filter, "quantity": 1})
 
 func set_player_reference(player):
 	if not player:

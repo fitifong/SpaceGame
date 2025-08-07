@@ -1,0 +1,206 @@
+[gd_scene load_steps=9 format=3 uid="uid://bynm52pde5aw1"]
+
+[ext_resource type="Script" uid="uid://doi26821mhm35" path="res://scripts/ui/water_recycler_ui.gd" id="1_k36vs"]
+[ext_resource type="PackedScene" uid="uid://dcakakdbeat4h" path="res://scenes/ui/slot_ui.tscn" id="2_qyi3g"]
+[ext_resource type="PackedScene" uid="uid://deucu334dn3e1" path="res://scenes/ui/output_slot.tscn" id="3_et6qv"]
+[ext_resource type="Texture2D" uid="uid://ciqj15q25pbxe" path="res://assets/UI Sprites/UI_slot.aseprite" id="4_v8lc5"]
+[ext_resource type="Texture2D" uid="uid://dw04xym0a8jwg" path="res://assets/UI Sprites/UI_slot_hover.aseprite" id="5_5t28n"]
+[ext_resource type="Texture2D" uid="uid://d1bmo5puicbva" path="res://assets/UI Sprites/UI_slot_drag.aseprite" id="6_3m3jl"]
+[ext_resource type="Texture2D" uid="uid://cg0b6ps8xc0sq" path="res://assets/UI Sprites/StorageUI.aseprite" id="7_aioj4"]
+[ext_resource type="Texture2D" uid="uid://cb63kwt750owb" path="res://assets/UI Sprites/MachineUI.aseprite" id="8_uv4ry"]
+
+[node name="WaterRecyclerUI" type="Control" node_paths=PackedStringArray("input_slot", "filter_slot", "output_slot", "process_button", "auto_mode_toggle", "progress_bar", "status_label", "filter_durability_bar", "filter_durability_label", "power_status_label")]
+layout_mode = 3
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+grow_horizontal = 2
+grow_vertical = 2
+script = ExtResource("1_k36vs")
+input_slot = NodePath("HBoxContainer/Main/Input/InputSlot1")
+filter_slot = NodePath("HBoxContainer/Main/Filter/FilterSlot")
+output_slot = NodePath("HBoxContainer/Main/Output/OutputSlot")
+process_button = NodePath("HBoxContainer/Main/Process_Button")
+auto_mode_toggle = NodePath("HBoxContainer/Main/HBoxContainer/CheckBox")
+progress_bar = NodePath("HBoxContainer/Main/Progress")
+status_label = NodePath("HBoxContainer/Main/StatusLabel")
+filter_durability_bar = NodePath("HBoxContainer/Main/Filter/FilterDurabilityProgress")
+filter_durability_label = NodePath("HBoxContainer/Main/Filter/FilterDurabilityLabel")
+power_status_label = NodePath("HBoxContainer/Power/PowerStatus")
+slot_template = ExtResource("2_qyi3g")
+output_slot_template = ExtResource("3_et6qv")
+ui_slot = ExtResource("4_v8lc5")
+ui_slot_hover = ExtResource("5_5t28n")
+ui_slot_drag = ExtResource("6_3m3jl")
+
+[node name="HBoxContainer" type="HBoxContainer" parent="."]
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -282.5
+offset_top = -136.0
+offset_right = 282.5
+offset_bottom = 136.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="Main" type="NinePatchRect" parent="HBoxContainer"]
+custom_minimum_size = Vector2(401, 272)
+layout_mode = 2
+texture = ExtResource("7_aioj4")
+region_rect = Rect2(0, 0, 234, 234)
+patch_margin_left = 1
+patch_margin_top = 1
+patch_margin_right = 1
+patch_margin_bottom = 1
+
+[node name="Process_Button" type="Button" parent="HBoxContainer/Main"]
+layout_mode = 1
+anchors_preset = 5
+anchor_left = 0.5
+anchor_right = 0.5
+offset_left = -54.0
+offset_top = 95.0
+offset_right = 56.0
+offset_bottom = 138.0
+grow_horizontal = 2
+text = "Process
+"
+
+[node name="Input" type="GridContainer" parent="HBoxContainer/Main"]
+layout_mode = 1
+anchors_preset = -1
+anchor_left = 0.12
+anchor_top = 0.069
+anchor_right = 0.798
+anchor_bottom = 0.301
+offset_left = -5.62
+offset_top = 65.232
+offset_right = -213.498
+offset_bottom = 66.128
+grow_horizontal = 2
+theme_override_constants/h_separation = 40
+theme_override_constants/v_separation = 90
+
+[node name="InputSlot1" parent="HBoxContainer/Main/Input" instance=ExtResource("2_qyi3g")]
+layout_mode = 2
+tooltip_text = "regular"
+
+[node name="Output" type="GridContainer" parent="HBoxContainer/Main"]
+layout_mode = 2
+offset_left = 298.5
+offset_top = 84.0
+offset_right = 362.5
+offset_bottom = 148.0
+
+[node name="OutputSlot" parent="HBoxContainer/Main/Output" instance=ExtResource("3_et6qv")]
+layout_mode = 2
+
+[node name="HBoxContainer" type="HBoxContainer" parent="HBoxContainer/Main"]
+layout_mode = 0
+offset_left = 122.5
+offset_top = 164.0
+offset_right = 274.5
+offset_bottom = 204.0
+
+[node name="CheckBox" type="CheckBox" parent="HBoxContainer/Main/HBoxContainer"]
+layout_mode = 2
+
+[node name="AutoProcess" type="Label" parent="HBoxContainer/Main/HBoxContainer"]
+layout_mode = 2
+text = "Auto Processing"
+
+[node name="Filter" type="GridContainer" parent="HBoxContainer/Main"]
+layout_mode = 0
+offset_left = 11.0
+offset_top = 196.0
+offset_right = 387.0
+offset_bottom = 260.0
+columns = 3
+
+[node name="FilterSlot" parent="HBoxContainer/Main/Filter" instance=ExtResource("2_qyi3g")]
+layout_mode = 2
+tooltip_text = "regular"
+
+[node name="FilterDurabilityLabel" type="Label" parent="HBoxContainer/Main/Filter"]
+layout_mode = 2
+text = "Filter Durability:"
+
+[node name="FilterDurabilityProgress" type="ProgressBar" parent="HBoxContainer/Main/Filter"]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 4
+
+[node name="StatusLabel" type="Label" parent="HBoxContainer/Main"]
+layout_mode = 2
+offset_left = 154.5
+offset_top = 4.0
+offset_right = 278.5
+offset_bottom = 27.0
+text = "Current Status"
+
+[node name="Progress" type="ProgressBar" parent="HBoxContainer/Main"]
+layout_mode = 0
+offset_left = 58.5
+offset_top = 36.0
+offset_right = 349.5
+offset_bottom = 63.0
+
+[node name="Power" type="NinePatchRect" parent="HBoxContainer"]
+custom_minimum_size = Vector2(160, 272)
+layout_direction = 2
+layout_mode = 2
+texture = ExtResource("8_uv4ry")
+patch_margin_left = 1
+patch_margin_top = 5
+patch_margin_right = 5
+patch_margin_bottom = 5
+
+[node name="PowerEfficiencySlider" type="HSlider" parent="HBoxContainer/Power"]
+layout_mode = 0
+offset_left = 24.1799
+offset_top = 248.0
+offset_right = 222.18
+offset_bottom = 264.0
+rotation = -1.57079
+
+[node name="PowerEfficiency" type="Label" parent="HBoxContainer/Power"]
+layout_mode = 0
+offset_left = 10.1799
+offset_top = 11.0
+offset_right = 59.1799
+offset_bottom = 42.0
+pivot_offset = Vector2(32, 0)
+theme_override_font_sizes/font_size = 10
+text = "Power Eff.
+50%"
+horizontal_alignment = 1
+
+[node name="PowerConsumption" type="Label" parent="HBoxContainer/Power"]
+layout_mode = 0
+offset_left = 48.1799
+offset_top = 80.0
+offset_right = 150.18
+offset_bottom = 112.0
+pivot_offset = Vector2(51, 0)
+theme_override_font_sizes/font_size = 10
+text = "Power Consumption:
+999 PU/sec."
+horizontal_alignment = 1
+
+[node name="PowerStatus" type="Label" parent="HBoxContainer/Power"]
+layout_mode = 0
+offset_left = 64.1799
+offset_top = 160.0
+offset_right = 128.18
+offset_bottom = 191.0
+pivot_offset = Vector2(32, 0)
+theme_override_font_sizes/font_size = 10
+text = "Power:
+Available"
+horizontal_alignment = 1
